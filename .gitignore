@@ -1,0 +1,76 @@
+# ---------- 공통 (OS/IDE) ----------
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------- React Native: RNApp ----------
+RNApp/node_modules/
+RNApp/.expo/
+RNApp/.watchmanconfig
+
+# Android (RN)
+RNApp/android/.gradle/
+RNApp/android/.idea/
+RNApp/android/local.properties
+RNApp/android/build/
+RNApp/android/app/build/
+RNApp/android/captures/
+RNApp/android/*.keystore
+RNApp/android/**/generated/
+RNApp/android/**/intermediates/
+RNApp/android/**/outputs/
+**/*.apk
+**/*.aab
+
+# iOS (RN)
+RNApp/ios/Pods/
+RNApp/ios/build/
+RNApp/ios/*.xcodeproj/project.xcworkspace/
+RNApp/ios/*.xcworkspace/xcuserdata/
+RNApp/ios/*.xcodeproj/xcuserdata/
+RNApp/ios/**/DerivedData/
+
+# Packagers
+RNApp/.cache/
+RNApp/.turbo/
+RNApp/.parcel-cache/
+
+# TypeScript
+RNApp/*.tsbuildinfo
+
+# ---------- Spring Boot: runningnavapp ----------
+runningnavapp/target/
+runningnavapp/build/
+runningnavapp/.gradle/
+runningnavapp/.idea/
+runningnavapp/.classpath
+runningnavapp/.project
+runningnavapp/.settings/
+
+# Maven/Gradle wrappers - 보통 포함하지만 바이너리 제외
+# (필요 시 유지: mvnw, mvnw.cmd, gradlew, gradlew.bat, gradle/wrapper/*는 커밋)
+# 아래 두 줄을 해제하면 wrapper까지 무시하므로 보통 주석 유지
+# runningnavapp/mvnw*
+# runningnavapp/gradle/
+
+# ---------- 공통 환경/비밀 ----------
+.env
+.env.*
+*.keystore
+*.jks
+*.pem
+*.p12
+*.crt
+*.key
