@@ -46,8 +46,6 @@ export default function RunningHomeScreen() {
 
       {/* 지도 영역 */}
       <View style={styles.mapPlaceholder}>
-        {/* <Text style={styles.mapText}>지도 영역</Text> */}
-        {/* <Text style={styles.mapSubtext}>여기에 지도가 표시됩니다</Text> */}
         {/* <NaverMapWebView /> */}
       </View>
       {/* 하단 탭바 모양 버튼 UI */}

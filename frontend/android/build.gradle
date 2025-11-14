@@ -10,6 +10,10 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        // Naver Maps SDK Maven repository
+        maven {
+            url 'https://repository.map.naver.com/archive/maven'
+        }
     }
     dependencies {
         classpath("com.android.tools.build:gradle")
