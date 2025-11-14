@@ -19,6 +19,14 @@ pnpm-debug.log*
 frontend/node_modules/
 frontend/.expo/
 frontend/.watchmanconfig
+frontend/.bundle/
+frontend/.claude/
+frontend/Gemfile
+frontend/Gemfile.lock
+frontend/README.md
+frontend/.eslintrc.js
+frontend/.prettierrc.js
+frontend/__tests__/
 
 # Android (RN)
 frontend/android/.gradle/
@@ -26,8 +34,12 @@ frontend/android/.idea/
 frontend/android/local.properties
 frontend/android/build/
 frontend/android/app/build/
+frontend/android/app/build.gradle
+frontend/android/app/proguard-rules.pro
+frontend/android/app/.cxx/
 frontend/android/captures/
 frontend/android/*.keystore
+frontend/android/gradle.properties
 frontend/android/**/generated/
 frontend/android/**/intermediates/
 frontend/android/**/outputs/
