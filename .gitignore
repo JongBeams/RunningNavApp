@@ -15,49 +15,49 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# ---------- React Native: RNApp ----------
-RNApp/node_modules/
-RNApp/.expo/
-RNApp/.watchmanconfig
+# ---------- React Native: frontend ----------
+frontend/node_modules/
+frontend/.expo/
+frontend/.watchmanconfig
 
 # Android (RN)
-RNApp/android/.gradle/
-RNApp/android/.idea/
-RNApp/android/local.properties
-RNApp/android/build/
-RNApp/android/app/build/
-RNApp/android/captures/
-RNApp/android/*.keystore
-RNApp/android/**/generated/
-RNApp/android/**/intermediates/
-RNApp/android/**/outputs/
+frontend/android/.gradle/
+frontend/android/.idea/
+frontend/android/local.properties
+frontend/android/build/
+frontend/android/app/build/
+frontend/android/captures/
+frontend/android/*.keystore
+frontend/android/**/generated/
+frontend/android/**/intermediates/
+frontend/android/**/outputs/
 **/*.apk
 **/*.aab
 
 # iOS (RN)
-RNApp/ios/Pods/
-RNApp/ios/build/
-RNApp/ios/*.xcodeproj/project.xcworkspace/
-RNApp/ios/*.xcworkspace/xcuserdata/
-RNApp/ios/*.xcodeproj/xcuserdata/
-RNApp/ios/**/DerivedData/
+frontend/ios/Pods/
+frontend/ios/build/
+frontend/ios/*.xcodeproj/project.xcworkspace/
+frontend/ios/*.xcworkspace/xcuserdata/
+frontend/ios/*.xcodeproj/xcuserdata/
+frontend/ios/**/DerivedData/
 
 # Packagers
-RNApp/.cache/
-RNApp/.turbo/
-RNApp/.parcel-cache/
+frontend/.cache/
+frontend/.turbo/
+frontend/.parcel-cache/
 
 # TypeScript
-RNApp/*.tsbuildinfo
+frontend/*.tsbuildinfo
 
-# ---------- Spring Boot: runningnavapp ----------
-runningnavapp/target/
-runningnavapp/build/
-runningnavapp/.gradle/
-runningnavapp/.idea/
-runningnavapp/.classpath
-runningnavapp/.project
-runningnavapp/.settings/
+# ---------- Spring Boot: backend ----------
+backend/target/
+backend/build/
+backend/.gradle/
+backend/.idea/
+backend/.classpath
+backend/.project
+backend/.settings/
 
 # Maven/Gradle wrappers - 보통 포함하지만 바이너리 제외
 # (필요 시 유지: mvnw, mvnw.cmd, gradlew, gradlew.bat, gradle/wrapper/*는 커밋)

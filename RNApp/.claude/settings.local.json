@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(cmd /c \"cd /d d:\\rnapp\\RNApp\\android && gradlew.bat clean\")"
-    ],
-    "deny": [],
-    "ask": []
-  }
-}
