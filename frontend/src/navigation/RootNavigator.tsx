@@ -1,12 +1,7 @@
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {RootStackParamList} from './types';
+import {RootStackParamList} from '../types/navigation';
 import TabNavigator from './TabNavigator';
-
-// 코스 상세 화면 (임시)
-const CourseDetailScreen = () => {
-  return null; // 추후 구현 예정
-};
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -14,7 +9,7 @@ const RootNavigator = () => {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerShown: true,
+        headerShown: false,
         headerTitleAlign: 'center',
       }}>
       <Stack.Screen
@@ -23,14 +18,6 @@ const RootNavigator = () => {
         options={{
           headerShown: false,
         }}
-      />
-      <Stack.Screen
-        name="CourseDetail"
-        component={CourseDetailScreen}
-        options={({route}) => ({
-          title: route.params.courseName || '코스 상세',
-          headerBackTitle: '뒤로',
-        })}
       />
     </Stack.Navigator>
   );

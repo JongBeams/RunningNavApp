@@ -1,25 +1,19 @@
 import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {TabParamList} from './types';
+import {MainTabParamList} from '../types/navigation';
+import HomeScreen from '../screens/Home/HomeScreen';
+import MyPageScreen from '../screens/MyPage/MyPageScreen';
+import RunningHomeScreen from '../screens/Running/RunningHomeScreen';
+import {CustomHeader} from '../components/navigation/TabScreens';
+import {SVGIcon} from '../components/common';
+import {HOME_ICON_PATH, USER_ICON_PATH,RUNNIGN_ICON_PATH} from '../styles';
 
-// 임시 화면 컴포넌트들 (추후 실제 화면으로 교체)
-const CourseListScreen = () => {
-  return null; // 추후 구현 예정
-};
-
-const CourseCreateScreen = () => {
-  return null; // 추후 구현 예정
-};
-
-const NavigationScreen = () => {
-  return null; // 추후 구현 예정
-};
-
-const Tab = createBottomTabNavigator<TabParamList>();
+const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const TabNavigator = () => {
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={{
         headerShown: true,
         headerTitleAlign: 'center',
@@ -27,30 +21,41 @@ const TabNavigator = () => {
         tabBarInactiveTintColor: '#8E8E93',
       }}>
       <Tab.Screen
-        name="CourseList"
-        component={CourseListScreen}
+        name="Running"
+        component={RunningHomeScreen}
         options={{
-          title: '코스 목록',
-          tabBarLabel: '목록',
-          tabBarIcon: ({color}) => null, // 추후 아이콘 추가
+          headerShown: false,
+          tabBarLabel: '러닝',
+          tabBarIcon: ({color}) => (
+            <SVGIcon iconPath={RUNNIGN_ICON_PATH} color={color} />
+          ),
+          tabBarStyle: {display: 'none'}, // Running 탭일 때 TabNavigator 탭바 숨김
         }}
       />
       <Tab.Screen
-        name="CourseCreate"
-        component={CourseCreateScreen}
+        name="Home"
+        component={HomeScreen}
         options={{
-          title: '코스 생성',
-          tabBarLabel: '생성',
-          tabBarIcon: ({color}) => null, // 추후 아이콘 추가
+          headerTitle: '',
+          headerLeft: CustomHeader.Logo,
+          headerRight: CustomHeader.SettingsButton,
+          tabBarLabel: '홈',
+          tabBarIcon: ({color}) => (
+            <SVGIcon iconPath={HOME_ICON_PATH} color={color} />
+          ),
         }}
       />
       <Tab.Screen
-        name="Navigation"
-        component={NavigationScreen}
+        name="MyPage"
+        component={MyPageScreen}
         options={{
-          title: '네비게이션',
-          tabBarLabel: '내비게이션',
-          tabBarIcon: ({color}) => null, // 추후 아이콘 추가
+          headerTitle: '',
+          headerLeft: CustomHeader.Logo,
+          headerRight: CustomHeader.SettingsButton,
+          tabBarLabel: '마이페이지',
+          tabBarIcon: ({color}) => (
+            <SVGIcon iconPath={USER_ICON_PATH} color={color} />
+          ),
         }}
       />
     </Tab.Navigator>
