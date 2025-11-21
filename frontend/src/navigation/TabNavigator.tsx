@@ -1,4 +1,5 @@
 import React from 'react';
+import {Alert} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {MainTabParamList} from '../types/navigation';
 import HomeScreen from '../screens/Home/HomeScreen';
@@ -7,10 +8,27 @@ import RunningHomeScreen from '../screens/Running/RunningHomeScreen';
 import {CustomHeader} from '../components/navigation/TabScreens';
 import {SVGIcon} from '../components/common';
 import {HOME_ICON_PATH, USER_ICON_PATH,RUNNIGN_ICON_PATH} from '../styles';
+import {ensureLocationPermission, openLocationSettings} from '../services/location';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const TabNavigator = () => {
+  const handleRunningTabPress = async (e: any) => {
+    const hasPermission = await ensureLocationPermission();
+
+    if (!hasPermission) {
+      e.preventDefault();
+      Alert.alert(
+        'Location Permission Required',
+        'Running feature requires location access. Please enable it in settings.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: () => openLocationSettings() },
+        ]
+      );
+    }
+  };
+
   return (
     <Tab.Navigator
       initialRouteName="Home"
@@ -30,6 +48,9 @@ const TabNavigator = () => {
             <SVGIcon iconPath={RUNNIGN_ICON_PATH} color={color} />
           ),
           tabBarStyle: {display: 'none'}, // Running 탭일 때 TabNavigator 탭바 숨김
+        }}
+        listeners={{
+          tabPress: handleRunningTabPress,
         }}
       />
       <Tab.Screen

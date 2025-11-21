@@ -1,18 +1,23 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, BackHandler} from 'react-native';
-import {colors, spacing, fontSize, commonStyles, ADD_COURSE_ICON_PATH, HOME_ICON_PATH, LIST_COURSE_ICON_PATH} from '@/src/styles';
+import {colors, spacing, fontSize, commonStyles, RUNNIGN_START_ICON_PATH, HOME_ICON_PATH, LIST_COURSE_ICON_PATH} from '@/src/styles';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
+import type {CompositeNavigationProp} from '@react-navigation/native';
 import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
-import type {MainTabParamList} from '../../types/navigation';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import type {MainTabParamList, RootStackParamList} from '../../types/navigation';
 import { SVGIcon } from '@/src/components/common';
 import NaverMapWebView from '@/src/components/map/NaverMapWebView';
 
-type MainTabNav = BottomTabNavigationProp<MainTabParamList>;
+type RunningScreenNav = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
 
 
 export default function RunningHomeScreen() {
-  const navigation = useNavigation<MainTabNav>();
+  const navigation = useNavigation<RunningScreenNav>();
   const [selectedCourse, setSelectedCourse] = React.useState<string>('코스를 선택해주세요');
 
   const handleHomePress = () => {
@@ -40,28 +45,28 @@ export default function RunningHomeScreen() {
       {/* 상단 헤더 - 선택된 코스명 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
-          {/* {selectedCourse} */}현재 경로 1 표시
+          {/* {selectedCourse} */}현재 코스 1 표시
           </Text>
       </View>
 
       {/* 지도 영역 */}
       <View style={styles.mapPlaceholder}>
-        {/* <NaverMapWebView /> */}
+        <NaverMapWebView />
       </View>
       {/* 하단 탭바 모양 버튼 UI */}
       <View style={styles.tabBar}>
         <TouchableOpacity style={styles.tab} onPress={() => {}}>
-          <SVGIcon iconPath={ADD_COURSE_ICON_PATH} color={colors.primary} />
-          <Text style={styles.tabText}>경로 추가</Text>
+          <SVGIcon iconPath={RUNNIGN_START_ICON_PATH} color={colors.primary} />
+          <Text style={styles.tabText}>러닝 시작</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.tab} onPress={handleHomePress}>
           <SVGIcon iconPath={HOME_ICON_PATH} color={colors.primary} />
           <Text style={styles.tabText}>홈</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.tab} onPress={() => {}}>
+        <TouchableOpacity style={styles.tab} onPress={() => navigation.navigate('ListCourse')}>
           <SVGIcon iconPath={LIST_COURSE_ICON_PATH} color={colors.primary} />
-          <Text style={styles.tabText}>경로 목록</Text>
+          <Text style={styles.tabText}>코스 목록</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -72,8 +77,6 @@ const styles = StyleSheet.create({
   mapPlaceholder: {
     flex: 1,
     backgroundColor: colors.backgroundDark,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   header: {
     height: 60,

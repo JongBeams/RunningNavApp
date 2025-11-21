@@ -1,8 +1,41 @@
-import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { Alert } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 import RootNavigator from './navigation/RootNavigator';
+import LoadingScreen from './screens/Loading/LoadingScreen';
+import { ensureLocationPermission, openLocationSettings } from './services/location';
 
 function App(): React.JSX.Element {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const initApp = async () => {
+      // 위치 권한 요청
+      const hasPermission = await ensureLocationPermission();
+
+      if (!hasPermission) {
+        Alert.alert(
+          'Location Permission Required',
+          'This app needs location access to provide running navigation. Please enable it in settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => openLocationSettings() },
+          ]
+        );
+      }
+
+      // 최소 로딩 시간 (스플래시 효과)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      setIsLoading(false);
+    };
+
+    initApp();
+  }, []);
+
+  if (isLoading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <NavigationContainer>
       <RootNavigator />
