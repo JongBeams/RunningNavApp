@@ -71,6 +71,10 @@ backend/.classpath
 backend/.project
 backend/.settings/
 
+# Spring Boot sensitive configuration files
+backend/src/main/resources/application-local.properties
+backend/src/main/resources/application-prod.properties
+
 # Maven/Gradle wrappers - 보통 포함하지만 바이너리 제외
 # (필요 시 유지: mvnw, mvnw.cmd, gradlew, gradlew.bat, gradle/wrapper/*는 커밋)
 # 아래 두 줄을 해제하면 wrapper까지 무시하므로 보통 주석 유지
