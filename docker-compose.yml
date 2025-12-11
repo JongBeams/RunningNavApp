@@ -11,6 +11,41 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    networks:
+      - runrun-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d runrun_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: runrun_backend
+    environment:
+      # Database Configuration
+      DB_URL: jdbc:postgresql://postgres:5432/runrun_db
+      DB_USERNAME: admin
+      DB_PASSWORD: manager
+      # JWT Configuration
+      JWT_SECRET_KEY: your-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm-security
+      # Naver API Configuration
+      NAVER_CLIENT_ID: gb25z9esgh
+      NAVER_CLIENT_SECRET: qVa5GqLMGaQqkUhMgrIoiKu0olNJTzVOtkjVLEPa
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - runrun-network
+
+networks:
+  runrun-network:
+    driver: bridge
 
 volumes:
   postgres_data:

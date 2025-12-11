@@ -31,6 +31,9 @@ public class JwtService {
     @Value("${jwt.access-token-expire-minutes:30}")
     private int accessTokenExpireMinutes;
 
+    @Value("${jwt.refresh-token-expire-days:30}")
+    private int refreshTokenExpireDays;
+
     @Value("${jwt.algorithm:HS256}")
     private String algorithm;
     
@@ -89,6 +92,30 @@ public class JwtService {
     }
 
     /**
+     * JWT Refresh Token 생성
+     *
+     * @param data 토큰에 포함할 데이터 (user_id, email 등)
+     * @return JWT Refresh Token 문자열
+     */
+    public String createRefreshToken(Map<String, Object> data) {
+        Map<String, Object> toEncode = new HashMap<>(data);
+
+        Date expire = Date.from(LocalDateTime.now().plusDays(refreshTokenExpireDays).toInstant(ZoneOffset.UTC));
+        toEncode.put("iat", Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC)));
+
+        SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+
+        String encodedJwt = Jwts.builder()
+                .claims(toEncode)
+                .expiration(expire)
+                .signWith(key)
+                .compact();
+
+        logger.info("[JWT] Refresh Token 생성 완료 (만료: {}일)", refreshTokenExpireDays);
+        return encodedJwt;
+    }
+
+    /**
      * JWT 토큰 디코딩 (검증 포함)
      *
      * @param token JWT 토큰 문자열
@@ -104,5 +131,14 @@ public class JwtService {
                 .parseSignedClaims(token)
                 .getPayload();
         return payload;
+    }
+
+    /**
+     * Refresh Token 만료 시간 계산
+     *
+     * @return Refresh Token 만료 시간
+     */
+    public LocalDateTime getRefreshTokenExpiresAt() {
+        return LocalDateTime.now().plusDays(refreshTokenExpireDays);
     }
 }
