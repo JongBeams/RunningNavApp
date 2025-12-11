@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
+import {Alert} from 'react-native';
+import {NavigationContainer} from '@react-navigation/native';
 import RootNavigator from './navigation/RootNavigator';
 import LoadingScreen from './screens/Loading/LoadingScreen';
-import { ensureLocationPermission, openLocationSettings } from './services/location';
+import {
+  ensureLocationPermission,
+  openLocationSettings,
+} from './services/location';
+import {AuthProvider} from './context/AuthContext';
 
 function App(): React.JSX.Element {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     const initApp = async () => {
@@ -18,28 +22,32 @@ function App(): React.JSX.Element {
           'Location Permission Required',
           'This app needs location access to provide running navigation. Please enable it in settings.',
           [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Open Settings', onPress: () => openLocationSettings() },
-          ]
+            {text: 'Cancel', style: 'cancel'},
+            {text: 'Open Settings', onPress: () => openLocationSettings()},
+          ],
         );
       }
 
       // 최소 로딩 시간 (스플래시 효과)
       await new Promise(resolve => setTimeout(resolve, 1500));
-      setIsLoading(false);
+      setIsInitializing(false);
     };
 
     initApp();
   }, []);
 
-  if (isLoading) {
+  // AuthProvider 밖에서 초기 로딩 화면 표시
+  if (isInitializing) {
     return <LoadingScreen />;
   }
 
+  // AuthProvider 내부에서 인증 상태 관리
   return (
-    <NavigationContainer>
-      <RootNavigator />
-    </NavigationContainer>
+    <AuthProvider>
+      <NavigationContainer>
+        <RootNavigator />
+      </NavigationContainer>
+    </AuthProvider>
   );
 }
 

@@ -22,6 +22,11 @@ export const colors = {
   textSecondary: '#666666', // 보조 텍스트 색상 (중간 회색)
   textLight: '#999999', // 연한 텍스트 색상 (밝은 회색)
 
+  // 회색 계열 (Gray Scale)
+  darkGray: '#333333', // 진한 회색
+  gray: '#666666', // 중간 회색
+  lightGray: '#CCCCCC', // 밝은 회색
+
   // UI 요소 색상 (UI Colors)
   border: '#e0e0e0', // 테두리 색상
   borderLight: '#f0f0f0', // 밝은 테두리 색상

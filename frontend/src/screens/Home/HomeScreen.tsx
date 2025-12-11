@@ -1,6 +1,6 @@
 import React from 'react';
 import {View, Text, StyleSheet, ScrollView, BackHandler, Alert} from 'react-native';
-import {colors, spacing, fontSize, commonStyles} from '@/src/styles';
+import {colors, spacing, fontSize, commonStyles} from '../../styles';
 import {useFocusEffect} from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
 

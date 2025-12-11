@@ -1,13 +1,13 @@
 import React from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, BackHandler} from 'react-native';
-import {colors, spacing, fontSize, commonStyles, RUNNIGN_START_ICON_PATH, HOME_ICON_PATH, LIST_COURSE_ICON_PATH} from '@/src/styles';
+import {colors, spacing, fontSize, commonStyles, RUNNIGN_START_ICON_PATH, HOME_ICON_PATH, LIST_COURSE_ICON_PATH} from '../../styles';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import type {CompositeNavigationProp} from '@react-navigation/native';
 import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {MainTabParamList, RootStackParamList} from '../../types/navigation';
-import { SVGIcon } from '@/src/components/common';
-import NaverMapWebView from '@/src/components/map/NaverMapWebView';
+import { SVGIcon } from '../../components/common';
+import NaverMapWebView from '../../components/map/NaverMapWebView';
 
 type RunningScreenNav = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList>,

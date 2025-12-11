@@ -1,12 +1,12 @@
 import React from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
 
 export default function LoadingScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.logo}>RunRun</Text>
       <ActivityIndicator size="large" color="#4A90D9" style={styles.spinner} />
-      <Text style={styles.loadingText}>Loading...</Text>
+      <Text style={styles.loadingText}>앱을 시작하는 중...</Text>
     </View>
   );
 }

@@ -3,7 +3,7 @@
     "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["*"]           // "@/App" => "./App"
+      "@/*": ["src/*"]           // "@/context/AuthContext" => "./src/context/AuthContext"
     }
   }
 }

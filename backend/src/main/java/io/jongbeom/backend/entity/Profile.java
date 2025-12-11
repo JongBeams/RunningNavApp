@@ -36,7 +36,7 @@ public class Profile {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(name = "refresh_token")
+    @Column(name = "refresh_token", length = 512)
     private String refreshToken;
 
     @Column(name = "refresh_token_expires_at")

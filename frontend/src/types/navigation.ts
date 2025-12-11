@@ -1,5 +1,11 @@
 import type {NavigatorScreenParams} from '@react-navigation/native';
 
+// 인증 스택 네비게이터 (로그인, 회원가입)
+export type AuthStackParamList = {
+  Login: undefined;
+  Signup: undefined;
+};
+
 // 메인 탭 네비게이터 (러닝, 홈, 마이페이지)
 export type MainTabParamList = {
   Running: undefined;

@@ -4,9 +4,9 @@ module.exports = {
     [
       'module-resolver',
       {
-        root: ['./'],        // 루트 기준
+        root: ['./src'],        // src 폴더를 루트로 설정
         alias: {
-          '@': './',
+          '@': './src',         // @ = ./src 매핑
         },
         extensions: [
           '.ios.ts',
