@@ -5,6 +5,7 @@ import {useAuth} from '../context/AuthContext';
 import TabNavigator from './TabNavigator';
 import AuthNavigator from './AuthNavigator';
 import ListCourseScreen from '../screens/Running/ListCourseScreen';
+import CreateCourseScreen from '../screens/Running/CreateCourseScreen';
 import LoadingScreen from '../screens/Loading/LoadingScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -42,6 +43,13 @@ const RootNavigator = () => {
         options={{
           headerShown: true,
           headerTitle: '경로 목록',
+        }}
+      />
+      <Stack.Screen
+        name="CreateCourse"
+        component={CreateCourseScreen}
+        options={{
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

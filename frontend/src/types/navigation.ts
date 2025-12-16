@@ -28,6 +28,7 @@ export type RootStackParamList = {
     courseName?: string;
   };
   ListCourse: undefined;
+  CreateCourse: undefined;
 };
 
 // 네비게이션 프롭 타입 헬퍼

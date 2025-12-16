@@ -83,6 +83,22 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 리소스 없음 예외 처리
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        logger.warn("[예외] 리소스 없음: {}", ex.getMessage());
+
+        Map<String, Object> errorResponse = createErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                "RESOURCE_NOT_FOUND",
+                ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+    }
+
+    /**
      * Validation 예외 처리 (@Valid)
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
