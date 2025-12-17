@@ -11,6 +11,13 @@ const DEFAULT_ZOOM = 4; // 약 50m 범위
 interface KakaoMapWebViewProps {
   appKey?: string;
   initialZoom?: number;
+  centerLat?: number; // 지도 중심 위도
+  centerLng?: number; // 지도 중심 경도
+  routePath?: number[][]; // 경로 좌표 배열 [[lng, lat], ...]
+  startLat?: number; // 출발지 위도
+  startLng?: number; // 출발지 경도
+  endLat?: number; // 도착지 위도
+  endLng?: number; // 도착지 경도
   onMapClick?: (lat: number, lng: number) => void;
   onInitialized?: () => void;
 }
@@ -18,6 +25,13 @@ interface KakaoMapWebViewProps {
 export default function KakaoMapWebView({
   appKey = KAKAO_APP_KEY,
   initialZoom = DEFAULT_ZOOM,
+  centerLat,
+  centerLng,
+  routePath,
+  startLat,
+  startLng,
+  endLat,
+  endLng,
   onMapClick,
   onInitialized,
 }: KakaoMapWebViewProps) {
@@ -30,6 +44,12 @@ export default function KakaoMapWebView({
 
   useEffect(() => {
     const fetchLocation = async () => {
+      // centerLat, centerLng가 제공되면 우선 사용
+      if (centerLat !== undefined && centerLng !== undefined) {
+        setCurrentLocation({lat: centerLat, lng: centerLng});
+        return;
+      }
+
       try {
         const location = await getCurrentLocation();
         setCurrentLocation({lat: location.latitude, lng: location.longitude});
@@ -40,7 +60,43 @@ export default function KakaoMapWebView({
     };
 
     fetchLocation();
-  }, []);
+  }, [centerLat, centerLng]);
+
+  // 경로가 변경되면 WebView에 전달
+  useEffect(() => {
+    if (routePath && routePath.length > 0 && webViewRef.current && !isLoading) {
+      console.log('[KakaoMapWebView] 경로 표시:', routePath.length, '개 좌표');
+      webViewRef.current.postMessage(
+        JSON.stringify({
+          type: 'drawRoute',
+          path: routePath,
+        }),
+      );
+    }
+  }, [routePath, isLoading]);
+
+  // 출발/도착 마커 표시
+  useEffect(() => {
+    if (
+      startLat !== undefined &&
+      startLng !== undefined &&
+      endLat !== undefined &&
+      endLng !== undefined &&
+      webViewRef.current &&
+      !isLoading
+    ) {
+      console.log('[KakaoMapWebView] 출발/도착 마커 표시');
+      webViewRef.current.postMessage(
+        JSON.stringify({
+          type: 'showStartEndMarkers',
+          startLat,
+          startLng,
+          endLat,
+          endLng,
+        }),
+      );
+    }
+  }, [startLat, startLng, endLat, endLng, isLoading]);
 
   const handleMessage = (event: {nativeEvent: {data: string}}) => {
     try {

@@ -236,6 +236,44 @@ export const getKakaoMapDirectionsHtml = (
         }
 
         /**
+         * 출발지/도착지 마커 표시
+         */
+        function showStartEndMarkers(startLat, startLng, endLat, endLng) {
+            // 기존 마커 모두 제거
+            markers.forEach(function(marker) {
+                marker.setMap(null);
+            });
+            markers = [];
+            waypoints = [];
+
+            // 출발지 마커 추가
+            var startPosition = new kakao.maps.LatLng(startLat, startLng);
+            var startMarker = new kakao.maps.Marker({
+                position: startPosition,
+                map: map,
+                image: new kakao.maps.MarkerImage(
+                    'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/red_b.png',
+                    new kakao.maps.Size(50, 45)
+                )
+            });
+            markers.push(startMarker);
+
+            // 도착지 마커 추가
+            var endPosition = new kakao.maps.LatLng(endLat, endLng);
+            var endMarker = new kakao.maps.Marker({
+                position: endPosition,
+                map: map,
+                image: new kakao.maps.MarkerImage(
+                    'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/blue_b.png',
+                    new kakao.maps.Size(50, 45)
+                )
+            });
+            markers.push(endMarker);
+
+            console.log('[KakaoMap] 출발/도착 마커 표시 완료');
+        }
+
+        /**
          * React Native로부터 메시지 수신
          */
         document.addEventListener('message', function(event) {
@@ -267,6 +305,16 @@ export const getKakaoMapDirectionsHtml = (
                     case 'drawRoute':
                         // 실제 도로 경로 그리기
                         drawRealRoute(message.path);
+                        break;
+
+                    case 'showStartEndMarkers':
+                        // 출발/도착 마커 표시
+                        showStartEndMarkers(
+                            message.startLat,
+                            message.startLng,
+                            message.endLat,
+                            message.endLng
+                        );
                         break;
 
                     case 'calculateSimpleRoute':
