@@ -50,6 +50,19 @@ export default function RunningHomeScreen() {
     navigation.navigate('Home');
   };
 
+  // 러닝 시작 핸들러
+  const handleStartRunning = () => {
+    if (!selectedCourse) {
+      Alert.alert('알림', '코스를 먼저 선택해주세요.');
+      return;
+    }
+
+    // 러닝 네비게이션 화면으로 이동
+    navigation.navigate('RunningNavigation', {
+      course: selectedCourse,
+    });
+  };
+
   // 코스 목록 불러오기
   const loadCourses = async () => {
     setIsLoading(true);
@@ -194,7 +207,7 @@ export default function RunningHomeScreen() {
 
       {/* 하단 탭바 모양 버튼 UI */}
       <View style={styles.tabBar}>
-        <TouchableOpacity style={styles.tab} onPress={() => {}}>
+        <TouchableOpacity style={styles.tab} onPress={handleStartRunning}>
           <SVGIcon iconPath={RUNNIGN_START_ICON_PATH} color={colors.primary} />
           <Text style={styles.tabText}>러닝 시작</Text>
         </TouchableOpacity>

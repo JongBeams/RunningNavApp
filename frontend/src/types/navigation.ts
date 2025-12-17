@@ -1,4 +1,5 @@
 import type {NavigatorScreenParams} from '@react-navigation/native';
+import type {CourseResponse} from '../services/api/courseApi';
 
 // 인증 스택 네비게이터 (로그인, 회원가입)
 export type AuthStackParamList = {
@@ -29,6 +30,9 @@ export type RootStackParamList = {
   };
   ListCourse: undefined;
   CreateCourse: undefined;
+  RunningNavigation: {
+    course: CourseResponse;
+  };
 };
 
 // 네비게이션 프롭 타입 헬퍼

@@ -6,6 +6,7 @@ import TabNavigator from './TabNavigator';
 import AuthNavigator from './AuthNavigator';
 import ListCourseScreen from '../screens/Running/ListCourseScreen';
 import CreateCourseScreenKakao from '../screens/Running/CreateCourseScreenKakao';
+import RunningNavigationScreen from '../screens/Running/RunningNavigationScreen';
 import LoadingScreen from '../screens/Loading/LoadingScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -48,6 +49,13 @@ const RootNavigator = () => {
       <Stack.Screen
         name="CreateCourse"
         component={CreateCourseScreenKakao}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="RunningNavigation"
+        component={RunningNavigationScreen}
         options={{
           headerShown: false,
         }}
