@@ -187,6 +187,7 @@ export default function RunningHomeScreen() {
           startLng={startCoords?.lng}
           endLat={endCoords?.lat}
           endLng={endCoords?.lng}
+          showCurrentLocation={true}
           initialZoom={3}
         />
       </View>

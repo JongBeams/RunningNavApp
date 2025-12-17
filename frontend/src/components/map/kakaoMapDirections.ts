@@ -32,6 +32,7 @@ export const getKakaoMapDirectionsHtml = (
         var waypoints = []; // 경유지 배열
         var markers = []; // 마커 배열
         var polyline = null; // 경로 폴리라인
+        var currentLocationMarker = null; // 현재 위치 마커
 
         // 지도 초기화
         var mapContainer = document.getElementById('map');
@@ -274,6 +275,30 @@ export const getKakaoMapDirectionsHtml = (
         }
 
         /**
+         * 현재 위치 마커 표시
+         */
+        function showCurrentLocation(lat, lng) {
+            // 기존 현재 위치 마커 제거
+            if (currentLocationMarker) {
+                currentLocationMarker.setMap(null);
+            }
+
+            var position = new kakao.maps.LatLng(lat, lng);
+
+            // 현재 위치 마커 생성 (초록색 원형 마커)
+            currentLocationMarker = new kakao.maps.Marker({
+                position: position,
+                map: map,
+                image: new kakao.maps.MarkerImage(
+                    'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+                    new kakao.maps.Size(24, 35)
+                )
+            });
+
+            console.log('[KakaoMap] 현재 위치 마커 표시:', lat, lng);
+        }
+
+        /**
          * React Native로부터 메시지 수신
          */
         document.addEventListener('message', function(event) {
@@ -315,6 +340,11 @@ export const getKakaoMapDirectionsHtml = (
                             message.endLat,
                             message.endLng
                         );
+                        break;
+
+                    case 'showCurrentLocation':
+                        // 현재 위치 마커 표시
+                        showCurrentLocation(message.lat, message.lng);
                         break;
 
                     case 'calculateSimpleRoute':
