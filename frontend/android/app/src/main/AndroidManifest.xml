@@ -18,6 +18,11 @@
         android:name="com.naver.maps.map.CLIENT_ID"
         android:value="gb25z9esgh" />
 
+      <!-- Kakao Maps App Key -->
+      <meta-data
+        android:name="com.kakao.sdk.AppKey"
+        android:value="e4d342b1a7ca7ec9cfd162164101abc4" />
+
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"

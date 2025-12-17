@@ -14,6 +14,10 @@ buildscript {
         maven {
             url 'https://repository.map.naver.com/archive/maven'
         }
+        // Kakao Maps SDK Maven repository
+        maven {
+            url 'https://devrepo.kakao.com/nexus/repository/kakaomap-releases/'
+        }
     }
     dependencies {
         classpath("com.android.tools.build:gradle")
@@ -23,6 +27,14 @@ buildscript {
 }
 
 allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url 'https://devrepo.kakao.com/nexus/repository/kakaomap-releases/'
+        }
+    }
+
     configurations.all {
         resolutionStrategy {
             force 'androidx.core:core:1.13.0'

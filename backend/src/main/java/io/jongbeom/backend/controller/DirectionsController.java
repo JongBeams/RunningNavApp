@@ -3,6 +3,7 @@ package io.jongbeom.backend.controller;
 import io.jongbeom.backend.dto.DirectionsRequest;
 import io.jongbeom.backend.dto.DirectionsResponse;
 import io.jongbeom.backend.service.DirectionsService;
+import io.jongbeom.backend.service.KakaoMobilityService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ public class DirectionsController {
     private static final Logger logger = LoggerFactory.getLogger(DirectionsController.class);
 
     private final DirectionsService directionsService;
+    private final KakaoMobilityService kakaoMobilityService;
 
     /**
      * 경로 계산 (네이버 Directions 5 API)
@@ -59,6 +61,34 @@ public class DirectionsController {
 
         } catch (Exception e) {
             logger.error("[Directions] 경로 계산 실패: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * 보행자 경로 계산 (카카오 모빌리티 API)
+     *
+     * POST /api/directions/kakao
+     */
+    @PostMapping("/kakao")
+    public ResponseEntity<DirectionsResponse> getKakaoDirections(
+            @RequestBody DirectionsRequest request,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+        logger.info("[KakaoDirections] 보행자 경로 계산 요청: user={}, start={}, goal={}",
+                email, request.getStart(), request.getGoal());
+
+        try {
+            DirectionsResponse response = kakaoMobilityService.getWalkingRoute(request);
+
+            logger.info("[KakaoDirections] 경로 계산 성공: distance={}m, duration={}s",
+                    response.getDistance(), response.getDuration());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.error("[KakaoDirections] 경로 계산 실패: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
     }

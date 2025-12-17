@@ -7,7 +7,7 @@ import type {BottomTabNavigationProp} from '@react-navigation/bottom-tabs';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {MainTabParamList, RootStackParamList} from '../../types/navigation';
 import { SVGIcon } from '../../components/common';
-import NaverMapWebView from '../../components/map/NaverMapWebView';
+import KakaoMapWebView from '../../components/map/KakaoMapWebView';
 
 type RunningScreenNav = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList>,
@@ -51,7 +51,7 @@ export default function RunningHomeScreen() {
 
       {/* 지도 영역 */}
       <View style={styles.mapPlaceholder}>
-        <NaverMapWebView />
+        <KakaoMapWebView />
       </View>
       {/* 하단 탭바 모양 버튼 UI */}
       <View style={styles.tabBar}>

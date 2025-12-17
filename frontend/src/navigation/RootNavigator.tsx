@@ -5,7 +5,7 @@ import {useAuth} from '../context/AuthContext';
 import TabNavigator from './TabNavigator';
 import AuthNavigator from './AuthNavigator';
 import ListCourseScreen from '../screens/Running/ListCourseScreen';
-import CreateCourseScreen from '../screens/Running/CreateCourseScreen';
+import CreateCourseScreenKakao from '../screens/Running/CreateCourseScreenKakao';
 import LoadingScreen from '../screens/Loading/LoadingScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -47,7 +47,7 @@ const RootNavigator = () => {
       />
       <Stack.Screen
         name="CreateCourse"
-        component={CreateCourseScreen}
+        component={CreateCourseScreenKakao}
         options={{
           headerShown: false,
         }}
