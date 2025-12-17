@@ -21,7 +21,7 @@ import {
   waypointsToGeoJson,
   waypointsToLineString,
 } from '../../services/api/courseApi';
-import {getKakaoRouteBetweenPoints} from '../../services/api/kakaoMobilityApi';
+import {getTmapRouteBetweenPoints} from '../../services/api/tmapPedestrianApi';
 
 type CreateCourseScreenNav = NativeStackNavigationProp<
   RootStackParamList,
@@ -183,7 +183,7 @@ export default function CreateCourseScreenKakao() {
               }))
             : undefined;
 
-        const routeData = await getKakaoRouteBetweenPoints(
+        const routeData = await getTmapRouteBetweenPoints(
           start.latitude,
           start.longitude,
           goal.latitude,
@@ -241,7 +241,7 @@ export default function CreateCourseScreenKakao() {
             }))
           : undefined;
 
-      const routeData = await getKakaoRouteBetweenPoints(
+      const routeData = await getTmapRouteBetweenPoints(
         start.latitude,
         start.longitude,
         goal.latitude,
