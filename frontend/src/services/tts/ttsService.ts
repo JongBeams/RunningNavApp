@@ -1,4 +1,6 @@
 import Tts from 'react-native-tts';
+import {Vibration} from 'react-native';
+import {getTTSVibrationSetting} from '../../screens/Setting/SettingScreen';
 
 /**
  * TTS 초기화 옵션
@@ -90,6 +92,12 @@ class TTSService {
       // queueMode가 false면 기존 음성 중지 후 재생
       if (!queueMode) {
         await this.stop();
+      }
+
+      // 진동 설정 확인 및 실행
+      const isVibrationEnabled = await getTTSVibrationSetting();
+      if (isVibrationEnabled) {
+        Vibration.vibrate(200); // 200ms 진동
       }
 
       // react-native-tts는 옵션 없이도 작동

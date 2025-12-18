@@ -7,6 +7,9 @@ import AuthNavigator from './AuthNavigator';
 import ListCourseScreen from '../screens/Running/ListCourseScreen';
 import CreateCourseScreenKakao from '../screens/Running/CreateCourseScreenKakao';
 import RunningNavigationScreen from '../screens/Running/RunningNavigationScreen';
+import SettingScreen from '../screens/Setting/SettingScreen';
+import RunningRecordListScreen from '../screens/RunningRecord/RunningRecordListScreen';
+import RunningRecordDetailScreen from '../screens/RunningRecord/RunningRecordDetailScreen';
 import LoadingScreen from '../screens/Loading/LoadingScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -58,6 +61,30 @@ const RootNavigator = () => {
         component={RunningNavigationScreen}
         options={{
           headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="Setting"
+        component={SettingScreen}
+        options={{
+          headerShown: true,
+          headerTitle: '설정',
+        }}
+      />
+      <Stack.Screen
+        name="RunningRecordList"
+        component={RunningRecordListScreen}
+        options={{
+          headerShown: true,
+          headerTitle: '러닝 기록',
+        }}
+      />
+      <Stack.Screen
+        name="RunningRecordDetail"
+        component={RunningRecordDetailScreen}
+        options={{
+          headerShown: true,
+          headerTitle: '러닝 상세',
         }}
       />
     </Stack.Navigator>

@@ -1,5 +1,7 @@
 import {useState, useEffect, useRef, useCallback} from 'react';
+import {Alert} from 'react-native';
 import {CourseResponse, geoJsonToWaypoints} from '../services/api/courseApi';
+import {createRunningRecord} from '../services/api/runningRecordApi';
 import useLocationTracking from './useLocationTracking';
 import useTTS from './useTTS';
 import RouteGuidanceService, {Waypoint} from '../services/tts/routeGuidance';
@@ -97,6 +99,7 @@ export function useRunningSession(
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const routeGuidanceRef = useRef<RouteGuidanceService | null>(null);
   const hasStartedRef = useRef(false);
+  const startTimeRef = useRef<string | null>(null);
 
   // TTS Hook
   const {speak: ttsSpeak, isInitialized: ttsInitialized} = useTTS({
@@ -108,11 +111,11 @@ export function useRunningSession(
     totalDistance,
     currentSpeed,
     currentLocation,
+    locationHistory,
     startTracking,
     stopTracking,
     pauseTracking,
     resumeTracking,
-    resetTracking,
   } = useLocationTracking({
     updateInterval: 3000,
     minDistance: 5,
@@ -182,6 +185,9 @@ export function useRunningSession(
     setStatus(RunningSessionStatus.RUNNING);
     hasStartedRef.current = true;
 
+    // 시작 시간 기록 (ISO 8601 format)
+    startTimeRef.current = new Date().toISOString();
+
     // 위치 추적 시작
     startTracking();
 
@@ -242,11 +248,62 @@ export function useRunningSession(
       await NavigationVoice.announceFinish(totalDistance, elapsedTime);
     }
 
-    // TODO: 러닝 기록 저장 API 호출
+    // 러닝 기록 저장
+    try {
+      if (!startTimeRef.current) {
+        console.warn('[RunningSession] 시작 시간 없음, 기록 저장 생략');
+        return;
+      }
+
+      const endTime = new Date().toISOString();
+
+      // 위치 기록을 좌표 배열로 변환 [[lng, lat], ...]
+      const routeCoordinates = locationHistory.map(loc => [
+        loc.longitude,
+        loc.latitude,
+      ]);
+
+      // 평균 속도 계산 (m/s)
+      const avgSpeed = elapsedTime > 0 ? totalDistance / elapsedTime : 0;
+
+      // 페이스 계산 (초/km)
+      const avgPace =
+        totalDistance > 0 ? (elapsedTime / (totalDistance / 1000)) : 0;
+
+      console.log('[RunningSession] 러닝 기록 저장 시작', {
+        courseId: course.id,
+        startTime: startTimeRef.current,
+        endTime,
+        distance: totalDistance,
+        duration: elapsedTime,
+        avgPace,
+        avgSpeed,
+        routePoints: routeCoordinates.length,
+      });
+
+      await createRunningRecord({
+        courseId: course.id,
+        startTime: startTimeRef.current,
+        endTime,
+        distance: totalDistance,
+        duration: elapsedTime,
+        avgPace,
+        avgSpeed,
+        routeCoordinates,
+      });
+
+      console.log('[RunningSession] 러닝 기록 저장 완료');
+      Alert.alert('완료', '러닝 기록이 저장되었습니다.');
+    } catch (error) {
+      console.error('[RunningSession] 러닝 기록 저장 실패:', error);
+      Alert.alert('오류', '러닝 기록 저장에 실패했습니다.');
+    }
   }, [
     isVoiceGuidanceEnabled,
     totalDistance,
     elapsedTime,
+    locationHistory,
+    course.id,
     stopTracking,
   ]);
 

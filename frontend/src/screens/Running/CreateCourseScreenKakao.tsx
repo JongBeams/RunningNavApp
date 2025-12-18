@@ -112,6 +112,11 @@ export default function CreateCourseScreenKakao() {
           handleAddWaypoint(data.latitude, data.longitude);
           break;
 
+        case 'markerClick':
+          // 마커 클릭 시 해당 위치를 다음 도착지로 설정
+          handleAddWaypoint(data.latitude, data.longitude);
+          break;
+
         case 'waypointRemoved':
           // WebView에서 경유지 제거 완료 -> 경로 재계산
           if (data.remainingCount >= 2) {

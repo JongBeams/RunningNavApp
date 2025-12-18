@@ -88,6 +88,20 @@ export const getKakaoMapDirectionsHtml = (
                 map: map
             });
 
+            // 마커 클릭 이벤트 추가
+            kakao.maps.event.addListener(marker, 'click', function() {
+                console.log('[KakaoMap] 마커 클릭:', lat, lng);
+
+                // React Native로 마커 클릭 좌표 전송
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                        type: 'markerClick',
+                        latitude: lat,
+                        longitude: lng
+                    }));
+                }
+            });
+
             markers.push(marker);
 
             console.log('[KakaoMap] 경유지 추가:', lat, lng, '(총', waypoints.length, '개)');

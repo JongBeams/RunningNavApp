@@ -33,6 +33,11 @@ export type RootStackParamList = {
   RunningNavigation: {
     course: CourseResponse;
   };
+  Setting: undefined;
+  RunningRecordList: undefined;
+  RunningRecordDetail: {
+    recordId: number;
+  };
 };
 
 // 네비게이션 프롭 타입 헬퍼
