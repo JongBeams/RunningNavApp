@@ -90,3 +90,8 @@ backend/src/main/resources/application-prod.properties
 *.p12
 *.crt
 *.key
+
+# ---------- 배포 파일 ----------
+runrun-deploy.tar.gz
+*.tar.gz
+backup_*.sql

@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import {WebView} from 'react-native-webview';
 import {useNavigation} from '@react-navigation/native';
@@ -22,6 +24,7 @@ import {
   waypointsToLineString,
 } from '../../services/api/courseApi';
 import {getTmapRouteBetweenPoints} from '../../services/api/tmapPedestrianApi';
+import Geolocation from '@react-native-community/geolocation';
 
 type CreateCourseScreenNav = NativeStackNavigationProp<
   RootStackParamList,
@@ -47,9 +50,76 @@ export default function CreateCourseScreenKakao() {
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
   const [currentLocation, setCurrentLocation] = useState({
-    latitude: 37.5435, // 서울 광진구 광나루로40길 60 인근
+    latitude: 37.5435, // 기본값 (서울 광진구)
     longitude: 127.0947,
   });
+
+  /**
+   * 화면 진입 시 현재 위치 가져오기
+   */
+  useEffect(() => {
+    const requestLocationPermission = async () => {
+      if (Platform.OS === 'android') {
+        try {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            {
+              title: '위치 권한 요청',
+              message: '코스 생성을 위해 현재 위치가 필요합니다.',
+              buttonNeutral: '나중에',
+              buttonNegative: '거부',
+              buttonPositive: '허용',
+            },
+          );
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            getCurrentLocation();
+          } else {
+            console.log('위치 권한이 거부되었습니다. 기본 위치를 사용합니다.');
+          }
+        } catch (err) {
+          console.warn('위치 권한 요청 실패:', err);
+        }
+      } else {
+        // iOS는 자동으로 권한 요청
+        getCurrentLocation();
+      }
+    };
+
+    const getCurrentLocation = () => {
+      Geolocation.getCurrentPosition(
+        position => {
+          const {latitude, longitude} = position.coords;
+          console.log('[CreateCourse] 현재 위치:', latitude, longitude);
+          setCurrentLocation({latitude, longitude});
+
+          // WebView에 현재 위치 마커 표시 요청
+          setTimeout(() => {
+            webViewRef.current?.postMessage(
+              JSON.stringify({
+                type: 'showCurrentLocation',
+                lat: latitude,
+                lng: longitude,
+              }),
+            );
+          }, 500); // WebView 로드 완료 후 실행
+        },
+        error => {
+          console.error('[CreateCourse] 위치 가져오기 실패:', error);
+          Alert.alert(
+            '위치 오류',
+            '현재 위치를 가져올 수 없습니다. 기본 위치로 시작합니다.',
+          );
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 10000,
+        },
+      );
+    };
+
+    requestLocationPermission();
+  }, []);
 
   /**
    * 두 지점 간 직선 거리 계산 (Haversine formula)

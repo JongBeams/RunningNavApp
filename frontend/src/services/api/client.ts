@@ -2,13 +2,19 @@ import axios, {AxiosInstance, InternalAxiosRequestConfig} from 'axios';
 import {getAccessToken, getRefreshToken, setAccessToken} from '../../utils/storage';
 import {Platform} from 'react-native';
 
-// API Base URL (로컬 개발 환경)
-// Android 에뮬레이터: 10.0.2.2 = PC의 localhost
-// iOS 시뮬레이터: localhost 그대로 사용 가능
-// 실기기: PC의 실제 IP 주소 사용 (예: 192.168.0.10)
-const API_BASE_URL = Platform.OS === 'android'
-  ? 'http://10.0.2.2:8080'  // Android 에뮬레이터
-  : 'http://localhost:8080'; // iOS 시뮬레이터
+// API Base URL
+// 개발: Android 에뮬레이터 = 10.0.2.2, iOS 시뮬레이터 = localhost
+// 프로덕션: AWS Lightsail 서버 IP
+// 임시: 개발 모드에서도 AWS 서버 사용 (실제 기기 테스트용)
+const API_BASE_URL = 'http://3.34.96.22:8080'; // 항상 AWS 서버 사용
+
+/* 원래 코드 (나중에 복원)
+const API_BASE_URL = __DEV__
+  ? Platform.OS === 'android'
+    ? 'http://10.0.2.2:8080'  // Android 에뮬레이터
+    : 'http://localhost:8080' // iOS 시뮬레이터
+  : 'http://3.34.96.22:8080'; // 프로덕션 서버 (AWS Lightsail)
+*/
 
 // Axios 인스턴스 생성
 const apiClient: AxiosInstance = axios.create({

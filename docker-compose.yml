@@ -20,20 +20,27 @@ services:
       retries: 5
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: eclipse-temurin:17-jre-alpine
     container_name: runrun_backend
+    volumes:
+      # 로컬에서 빌드한 jar 파일을 마운트
+      - ./backend/target/backend-0.0.1-SNAPSHOT.jar:/app/app.jar
+    working_dir: /app
+    command: ["java", "-jar", "app.jar"]
     environment:
       # Database Configuration
-      DB_URL: jdbc:postgresql://postgres:5432/runrun_db
-      DB_USERNAME: admin
-      DB_PASSWORD: manager
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/runrun_db
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: manager
       # JWT Configuration
       JWT_SECRET_KEY: your-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm-security
       # Naver API Configuration
-      NAVER_CLIENT_ID: gb25z9esgh
-      NAVER_CLIENT_SECRET: qVa5GqLMGaQqkUhMgrIoiKu0olNJTzVOtkjVLEPa
+      NAVER_API_CLIENT_ID: gb25z9esgh
+      NAVER_API_CLIENT_SECRET: qVa5GqLMGaQqkUhMgrIoiKu0olNJTzVOtkjVLEPa
+      # Kakao API Configuration
+      KAKAO_MOBILITY_API_KEY: bc76912909f696a8f58551e7422c963a
+      # TMAP API Configuration
+      TMAP_API_KEY: S0QjSk07FNpVtpxVji5E5Ug7SVt6xde5g0sX0bGb
     ports:
       - "8080:8080"
     depends_on:

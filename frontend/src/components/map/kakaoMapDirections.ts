@@ -299,7 +299,7 @@ export const getKakaoMapDirectionsHtml = (
 
             var position = new kakao.maps.LatLng(lat, lng);
 
-            // 현재 위치 마커 생성 (초록색 원형 마커)
+            // 현재 위치 마커 생성 (별 모양 - 노란색)
             currentLocationMarker = new kakao.maps.Marker({
                 position: position,
                 map: map,

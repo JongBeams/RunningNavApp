@@ -1,7 +1,4 @@
-import axios from 'axios';
-import {getAccessToken} from '../../utils/storage';
-
-const API_BASE_URL = 'http://10.0.2.2:8080/api';
+import apiClient from './client';
 
 interface WaypointCoord {
   lat: number;
@@ -31,12 +28,6 @@ export const getTmapRoute = async (
   waypoints?: WaypointCoord[],
 ): Promise<DirectionsResponse> => {
   try {
-    const token = await getAccessToken();
-
-    if (!token) {
-      throw new Error('인증 토큰이 없습니다.');
-    }
-
     // 요청 데이터 구성
     const requestData: DirectionsRequest = {
       start: `${startLng},${startLat}`, // 경도,위도 순서
@@ -52,15 +43,9 @@ export const getTmapRoute = async (
 
     console.log('[TMAP] 보행자 경로 요청:', requestData);
 
-    const response = await axios.post<DirectionsResponse>(
-      `${API_BASE_URL}/directions/tmap`,
+    const response = await apiClient.post<DirectionsResponse>(
+      '/api/directions/tmap',
       requestData,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      },
     );
 
     console.log('[TMAP] 경로 계산 성공:', {
