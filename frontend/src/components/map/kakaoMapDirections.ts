@@ -289,9 +289,9 @@ export const getKakaoMapDirectionsHtml = (
         }
 
         /**
-         * 현재 위치 마커 표시
+         * 현재 위치 마커 표시 (방향 정보 포함)
          */
-        function showCurrentLocation(lat, lng) {
+        function showCurrentLocation(lat, lng, heading) {
             // 기존 현재 위치 마커 제거
             if (currentLocationMarker) {
                 currentLocationMarker.setMap(null);
@@ -299,17 +299,46 @@ export const getKakaoMapDirectionsHtml = (
 
             var position = new kakao.maps.LatLng(lat, lng);
 
-            // 현재 위치 마커 생성 (별 모양 - 노란색)
-            currentLocationMarker = new kakao.maps.Marker({
-                position: position,
-                map: map,
-                image: new kakao.maps.MarkerImage(
-                    'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
-                    new kakao.maps.Size(24, 35)
-                )
-            });
+            // heading이 있으면 방향 표시 (CustomOverlay), 없으면 별 마커
+            if (heading !== null && heading !== undefined) {
+                // 방향 마커 생성 (빨간 원 + 방향 화살표)
+                var content = '<div style="position: relative; width: 40px; height: 40px;">' +
+                    '<div style="position: absolute; top: 0; left: 0; width: 40px; height: 40px; ' +
+                    'background: radial-gradient(circle, rgba(255,0,0,0.3) 0%, rgba(255,0,0,0.5) 70%, rgba(255,0,0,0.7) 100%); ' +
+                    'border: 2px solid #FF0000; border-radius: 50%; box-shadow: 0 0 8px rgba(255,0,0,0.6);"></div>' +
+                    '<div style="position: absolute; top: 50%; left: 50%; ' +
+                    'width: 0; height: 0; ' +
+                    'border-left: 6px solid transparent; ' +
+                    'border-right: 6px solid transparent; ' +
+                    'border-bottom: 16px solid #FFFFFF; ' +
+                    'transform: translate(-50%, -50%) rotate(' + heading + 'deg); ' +
+                    'transform-origin: center center; ' +
+                    'filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));"></div>' +
+                    '</div>';
 
-            console.log('[KakaoMap] 현재 위치 마커 표시:', lat, lng);
+                currentLocationMarker = new kakao.maps.CustomOverlay({
+                    position: position,
+                    content: content,
+                    xAnchor: 0.5,
+                    yAnchor: 0.5,
+                    zIndex: 3
+                });
+                currentLocationMarker.setMap(map);
+
+                console.log('[KakaoMap] 현재 위치 마커 표시 (방향):', lat, lng, 'heading:', heading);
+            } else {
+                // 방향 정보 없음 - 별 모양 마커 사용
+                currentLocationMarker = new kakao.maps.Marker({
+                    position: position,
+                    map: map,
+                    image: new kakao.maps.MarkerImage(
+                        'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+                        new kakao.maps.Size(24, 35)
+                    )
+                });
+
+                console.log('[KakaoMap] 현재 위치 마커 표시 (별):', lat, lng);
+            }
         }
 
         /**
@@ -358,7 +387,7 @@ export const getKakaoMapDirectionsHtml = (
 
                     case 'showCurrentLocation':
                         // 현재 위치 마커 표시
-                        showCurrentLocation(message.lat, message.lng);
+                        showCurrentLocation(message.lat, message.lng, message.heading);
                         break;
 
                     case 'calculateSimpleRoute':

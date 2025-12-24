@@ -40,6 +40,7 @@ export interface UseRunningSessionReturn {
   currentWaypointIndex: number;
   currentLat: number | undefined;
   currentLng: number | undefined;
+  currentHeading: number | null | undefined;
 
   // 제어 메서드
   start: () => Promise<void>;
@@ -359,6 +360,7 @@ export function useRunningSession(
     currentWaypointIndex,
     currentLat: currentLocation?.latitude,
     currentLng: currentLocation?.longitude,
+    currentHeading: currentLocation?.heading,
     start,
     pause,
     resume,

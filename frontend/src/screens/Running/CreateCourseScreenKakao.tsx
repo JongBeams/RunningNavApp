@@ -21,7 +21,6 @@ import {
 import {
   createCourse,
   waypointsToGeoJson,
-  waypointsToLineString,
 } from '../../services/api/courseApi';
 import {getTmapRouteBetweenPoints} from '../../services/api/tmapPedestrianApi';
 import Geolocation from '@react-native-community/geolocation';
@@ -40,6 +39,7 @@ interface Waypoint {
 interface RouteInfo {
   distance: number; // 미터
   duration: number; // 초
+  path: number[][]; // 실제 도로 경로 좌표 [[lng, lat], ...]
 }
 
 export default function CreateCourseScreenKakao() {
@@ -201,6 +201,7 @@ export default function CreateCourseScreenKakao() {
           setRouteInfo({
             distance: data.distance,
             duration: data.duration,
+            path: data.path || [],
           });
           break;
 
@@ -270,6 +271,7 @@ export default function CreateCourseScreenKakao() {
         setRouteInfo({
           distance: routeData.distance,
           duration: routeData.duration,
+          path: routeData.path,
         });
 
         // WebView에 실제 보행자 경로 전송
@@ -327,6 +329,7 @@ export default function CreateCourseScreenKakao() {
       setRouteInfo({
         distance: routeData.distance,
         duration: routeData.duration,
+        path: routeData.path,
       });
 
       if (webViewRef.current) {
@@ -410,7 +413,14 @@ export default function CreateCourseScreenKakao() {
     try {
       // 경유지를 GeoJSON 형식으로 변환
       const waypointsGeoJson = waypointsToGeoJson(waypoints);
-      const routeGeoJson = waypointsToLineString(waypoints);
+
+      // 실제 도로 경로를 GeoJSON LineString으로 변환
+      const routeGeoJson = JSON.stringify({
+        type: 'LineString',
+        coordinates: routeInfo.path,
+      });
+
+      console.log('[CreateCourse] 저장할 경로 좌표 개수:', routeInfo.path.length);
 
       await createCourse({
         name: courseName,

@@ -19,6 +19,7 @@ interface KakaoMapWebViewProps {
   endLat?: number; // 도착지 위도
   endLng?: number; // 도착지 경도
   showCurrentLocation?: boolean; // 현재 위치 표시 여부
+  heading?: number | null; // 현재 방향 (0-359도, null이면 방향 정보 없음)
   onMapClick?: (lat: number, lng: number) => void;
   onInitialized?: () => void;
 }
@@ -34,6 +35,7 @@ export default function KakaoMapWebView({
   endLat,
   endLng,
   showCurrentLocation = false,
+  heading,
   onMapClick,
   onInitialized,
 }: KakaoMapWebViewProps) {
@@ -115,24 +117,31 @@ export default function KakaoMapWebView({
     }
   }, [startLat, startLng, endLat, endLng, isLoading]);
 
-  // 현재 위치 마커 표시
+  // 현재 위치 마커 표시 (초기 + 실시간 갱신)
   useEffect(() => {
     if (
       showCurrentLocation &&
-      userLocation &&
       webViewRef.current &&
       !isLoading
     ) {
-      console.log('[KakaoMapWebView] 현재 위치 마커 표시');
-      webViewRef.current.postMessage(
-        JSON.stringify({
-          type: 'showCurrentLocation',
-          lat: userLocation.lat,
-          lng: userLocation.lng,
-        }),
-      );
+      // centerLat/centerLng가 제공되면 실시간 추적 (RunningNavigationScreen)
+      // 없으면 userLocation 사용 (RunningHomeScreen)
+      const lat = centerLat !== undefined ? centerLat : userLocation?.lat;
+      const lng = centerLng !== undefined ? centerLng : userLocation?.lng;
+
+      if (lat && lng) {
+        console.log('[KakaoMapWebView] 현재 위치 마커 업데이트:', lat, lng, 'heading:', heading);
+        webViewRef.current.postMessage(
+          JSON.stringify({
+            type: 'showCurrentLocation',
+            lat,
+            lng,
+            heading: heading !== undefined ? heading : null,
+          }),
+        );
+      }
     }
-  }, [showCurrentLocation, userLocation, isLoading]);
+  }, [showCurrentLocation, userLocation, centerLat, centerLng, heading, isLoading]);
 
   const handleMessage = (event: {nativeEvent: {data: string}}) => {
     try {

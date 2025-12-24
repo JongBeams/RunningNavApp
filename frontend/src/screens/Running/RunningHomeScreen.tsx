@@ -70,6 +70,31 @@ export default function RunningHomeScreen() {
       const data = await getMyCourses();
       setCourses(data);
       console.log('[RunningHome] 코스 목록 로드 성공:', data.length, '개');
+
+      // 선택된 코스가 삭제되었는지 확인
+      if (selectedCourse) {
+        const stillExists = data.find(c => c.id === selectedCourse.id);
+        if (!stillExists) {
+          console.log('[RunningHome] 선택된 코스가 삭제됨, 초기화');
+          // 삭제되었으면 첫 번째 코스를 선택 (있는 경우)
+          if (data.length > 0) {
+            console.log('[RunningHome] 첫 번째 코스 자동 선택:', data[0].name);
+            setSelectedCourse(data[0]);
+          } else {
+            setSelectedCourse(null);
+          }
+        } else {
+          // 코스 데이터 업데이트 (routeGeoJson 등이 변경되었을 수 있음)
+          console.log('[RunningHome] 선택된 코스 데이터 업데이트');
+          setSelectedCourse(stillExists);
+        }
+      } else {
+        // 선택된 코스가 없으면 첫 번째 코스를 기본 선택
+        if (data.length > 0) {
+          console.log('[RunningHome] 첫 번째 코스 기본 선택:', data[0].name);
+          setSelectedCourse(data[0]);
+        }
+      }
     } catch (error) {
       console.error('[RunningHome] 코스 목록 로드 실패:', error);
       Alert.alert('오류', '코스 목록을 불러올 수 없습니다.');
@@ -82,6 +107,11 @@ export default function RunningHomeScreen() {
   useFocusEffect(
     React.useCallback(() => {
       loadCourses();
+
+      // 삭제된 코스를 참조하고 있을 수 있으므로 초기화
+      if (selectedCourse) {
+        console.log('[RunningHome] 선택된 코스 유효성 확인 중...');
+      }
 
       const onBackPress = () => {
         navigation.navigate('Home');
@@ -149,10 +179,15 @@ export default function RunningHomeScreen() {
       // GeoJSON LineString: { type: "LineString", coordinates: [[lng, lat], ...] }
       if (routeData.type === 'LineString' && routeData.coordinates) {
         console.log('[RunningHome] 경로 좌표 로드:', routeData.coordinates.length, '개');
+        console.log('[RunningHome] 첫 번째 좌표:', routeData.coordinates[0]);
+        console.log('[RunningHome] 마지막 좌표:', routeData.coordinates[routeData.coordinates.length - 1]);
         return routeData.coordinates;
+      } else {
+        console.warn('[RunningHome] routeGeoJson 형식 오류:', routeData);
       }
     } catch (error) {
       console.error('[RunningHome] 경로 좌표 파싱 실패:', error);
+      console.error('[RunningHome] routeGeoJson 원본:', selectedCourse.routeGeoJson);
     }
 
     return undefined;
@@ -193,6 +228,7 @@ export default function RunningHomeScreen() {
       {/* 지도 영역 */}
       <View style={styles.mapPlaceholder}>
         <KakaoMapWebView
+          key={selectedCourse?.id || 'no-course'}
           centerLat={startCoords?.lat}
           centerLng={startCoords?.lng}
           routePath={routePath}

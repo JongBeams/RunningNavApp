@@ -52,6 +52,7 @@ export default function RunningNavigationScreen() {
     isOffRoute,
     currentLat,
     currentLng,
+    currentHeading,
     start,
     pause,
     resume,
@@ -214,6 +215,7 @@ export default function RunningNavigationScreen() {
           endLat={endCoords?.lat}
           endLng={endCoords?.lng}
           showCurrentLocation={true}
+          heading={currentHeading}
           initialZoom={3}
         />
 

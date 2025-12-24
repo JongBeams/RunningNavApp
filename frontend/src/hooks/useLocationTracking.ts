@@ -68,6 +68,35 @@ function calculateDistance(
 }
 
 /**
+ * 두 지점 간 방향(bearing) 계산
+ * @param lat1 시작 지점 위도
+ * @param lon1 시작 지점 경도
+ * @param lat2 도착 지점 위도
+ * @param lon2 도착 지점 경도
+ * @returns 방향 (0-359도, 북쪽이 0도)
+ */
+function calculateBearing(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+): number {
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x =
+    Math.cos(φ1) * Math.sin(φ2) -
+    Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+
+  const θ = Math.atan2(y, x);
+  const bearing = ((θ * 180) / Math.PI + 360) % 360; // 0-359도로 정규화
+
+  return bearing;
+}
+
+/**
  * 실시간 위치 추적 Hook
  *
  * GPS를 이용한 실시간 위치 추적 및 이동 거리 계산 기능 제공
@@ -131,7 +160,7 @@ export function useLocationTracking(
       }
 
       try {
-        const location = await getCurrentLocation();
+        let location = await getCurrentLocation();
 
         // 최소 이동 거리 체크
         if (lastLocation.current && !force) {
@@ -167,6 +196,18 @@ export function useLocationTracking(
             }
           }
 
+          // heading이 null이면 이동 방향 계산
+          if (location.heading === null || location.heading === undefined) {
+            const calculatedBearing = calculateBearing(
+              lastLocation.current.latitude,
+              lastLocation.current.longitude,
+              location.latitude,
+              location.longitude,
+            );
+            location = {...location, heading: calculatedBearing};
+            console.log('[LocationTracking] 방향 계산:', calculatedBearing.toFixed(1), '도');
+          }
+
           console.log('[LocationTracking] 이동:', distance.toFixed(2), 'm');
         }
 
@@ -185,6 +226,7 @@ export function useLocationTracking(
           lng: location.longitude,
           accuracy: location.accuracy,
           speed: location.speed,
+          heading: location.heading,
         });
       } catch (error: any) {
         console.error('[LocationTracking] 위치 업데이트 실패:', error);

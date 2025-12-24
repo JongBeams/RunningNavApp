@@ -5,6 +5,18 @@ import {check, request, RESULTS, PERMISSIONS, openSettings} from 'react-native-p
 
 type Coord = {latitude: number; longitude: number};
 
+// 전체 위치 정보 (방향 정보 포함)
+export type LocationData = {
+  latitude: number;
+  longitude: number;
+  altitude: number | null;
+  accuracy: number;
+  altitudeAccuracy: number | null;
+  heading: number | null; // 방향 (0-359도, null이면 방향 정보 없음)
+  speed: number | null;
+  timestamp: number;
+};
+
 // 기본 위치 옵션(주로 Android에서 interval/fastestInterval 사용)
 const defaultOptions: GeolocationOptions = {
   enableHighAccuracy: true,
@@ -31,10 +43,19 @@ export async function ensureLocationPermission(): Promise<boolean> {
 }
 
 // 현재 위치를 한 번 가져와 좌표만 반환하는 Promise 래퍼
-export function getCurrentLocation(options: GeolocationOptions = defaultOptions): Promise<Coord> {
+export function getCurrentLocation(options: GeolocationOptions = defaultOptions): Promise<LocationData> {
   return new Promise((resolve, reject) => {
     Geolocation.getCurrentPosition(
-      pos => resolve({latitude: pos.coords.latitude, longitude: pos.coords.longitude}),
+      pos => resolve({
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        altitude: pos.coords.altitude,
+        accuracy: pos.coords.accuracy,
+        altitudeAccuracy: pos.coords.altitudeAccuracy,
+        heading: pos.coords.heading,
+        speed: pos.coords.speed,
+        timestamp: pos.timestamp,
+      }),
       err => reject(err),
       options,
     );
