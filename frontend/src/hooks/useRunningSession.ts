@@ -192,9 +192,13 @@ export function useRunningSession(
     // 위치 추적 시작
     startTracking();
 
-    // 음성 안내
+    // 음성 안내 (에러 방지)
     if (isVoiceGuidanceEnabled) {
-      await NavigationVoice.announceStart(course.name);
+      try {
+        await NavigationVoice.announceStart(course.name);
+      } catch (error) {
+        console.error('[RunningSession] 음성 안내 실패:', error);
+      }
     }
   }, [
     course.name,
@@ -210,9 +214,13 @@ export function useRunningSession(
     // 위치 추적 일시정지
     pauseTracking();
 
-    // 음성 안내
+    // 음성 안내 (에러 방지)
     if (isVoiceGuidanceEnabled) {
-      await NavigationVoice.announcePause();
+      try {
+        await NavigationVoice.announcePause();
+      } catch (error) {
+        console.error('[RunningSession] 음성 안내 실패:', error);
+      }
     }
   }, [isVoiceGuidanceEnabled, pauseTracking]);
 
@@ -224,9 +232,13 @@ export function useRunningSession(
     // 위치 추적 재개
     resumeTracking();
 
-    // 음성 안내
+    // 음성 안내 (에러 방지)
     if (isVoiceGuidanceEnabled) {
-      await NavigationVoice.announceResume();
+      try {
+        await NavigationVoice.announceResume();
+      } catch (error) {
+        console.error('[RunningSession] 음성 안내 실패:', error);
+      }
     }
   }, [isVoiceGuidanceEnabled, resumeTracking]);
 
@@ -244,9 +256,13 @@ export function useRunningSession(
       timerRef.current = null;
     }
 
-    // 음성 안내
+    // 음성 안내 (에러 방지)
     if (isVoiceGuidanceEnabled) {
-      await NavigationVoice.announceFinish(totalDistance, elapsedTime);
+      try {
+        await NavigationVoice.announceFinish(totalDistance, elapsedTime);
+      } catch (error) {
+        console.error('[RunningSession] 음성 안내 실패:', error);
+      }
     }
 
     // 러닝 기록 저장

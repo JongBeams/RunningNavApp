@@ -299,46 +299,43 @@ export const getKakaoMapDirectionsHtml = (
 
             var position = new kakao.maps.LatLng(lat, lng);
 
-            // heading이 있으면 방향 표시 (CustomOverlay), 없으면 별 마커
+            // 빨간 원 기본 스타일 (네이버 지도 스타일 - 작고 단색)
+            var circleHtml = '<div style="position: absolute; top: 0; left: 0; width: 16px; height: 16px; ' +
+                'background-color: #FF0000; ' +
+                'border: 2px solid #FFFFFF; ' +
+                'border-radius: 50%; ' +
+                'box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>';
+
+            var content;
+
+            // heading이 있으면 방향 화살표 추가
             if (heading !== null && heading !== undefined) {
-                // 방향 마커 생성 (빨간 원 + 방향 화살표)
-                var content = '<div style="position: relative; width: 40px; height: 40px;">' +
-                    '<div style="position: absolute; top: 0; left: 0; width: 40px; height: 40px; ' +
-                    'background: radial-gradient(circle, rgba(255,0,0,0.3) 0%, rgba(255,0,0,0.5) 70%, rgba(255,0,0,0.7) 100%); ' +
-                    'border: 2px solid #FF0000; border-radius: 50%; box-shadow: 0 0 8px rgba(255,0,0,0.6);"></div>' +
+                content = '<div style="position: relative; width: 16px; height: 16px;">' +
+                    circleHtml +
                     '<div style="position: absolute; top: 50%; left: 50%; ' +
                     'width: 0; height: 0; ' +
-                    'border-left: 6px solid transparent; ' +
-                    'border-right: 6px solid transparent; ' +
-                    'border-bottom: 16px solid #FFFFFF; ' +
+                    'border-left: 4px solid transparent; ' +
+                    'border-right: 4px solid transparent; ' +
+                    'border-bottom: 10px solid #FFFFFF; ' +
                     'transform: translate(-50%, -50%) rotate(' + heading + 'deg); ' +
                     'transform-origin: center center; ' +
-                    'filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));"></div>' +
+                    'filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));"></div>' +
                     '</div>';
-
-                currentLocationMarker = new kakao.maps.CustomOverlay({
-                    position: position,
-                    content: content,
-                    xAnchor: 0.5,
-                    yAnchor: 0.5,
-                    zIndex: 3
-                });
-                currentLocationMarker.setMap(map);
-
                 console.log('[KakaoMap] 현재 위치 마커 표시 (방향):', lat, lng, 'heading:', heading);
             } else {
-                // 방향 정보 없음 - 별 모양 마커 사용
-                currentLocationMarker = new kakao.maps.Marker({
-                    position: position,
-                    map: map,
-                    image: new kakao.maps.MarkerImage(
-                        'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
-                        new kakao.maps.Size(24, 35)
-                    )
-                });
-
-                console.log('[KakaoMap] 현재 위치 마커 표시 (별):', lat, lng);
+                // 방향 정보 없으면 빨간 원만 표시
+                content = '<div style="position: relative; width: 16px; height: 16px;">' + circleHtml + '</div>';
+                console.log('[KakaoMap] 현재 위치 마커 표시 (원):', lat, lng);
             }
+
+            currentLocationMarker = new kakao.maps.CustomOverlay({
+                position: position,
+                content: content,
+                xAnchor: 0.5,
+                yAnchor: 0.5,
+                zIndex: 3
+            });
+            currentLocationMarker.setMap(map);
         }
 
         /**
