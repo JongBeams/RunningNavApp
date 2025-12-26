@@ -46,7 +46,7 @@ export interface UseRunningSessionReturn {
   start: () => Promise<void>;
   pause: () => Promise<void>;
   resume: () => Promise<void>;
-  stop: () => Promise<void>;
+  stop: (saveRecord?: boolean) => Promise<void>;
 
   // 설정
   toggleVoiceGuidance: () => void;
@@ -243,8 +243,8 @@ export function useRunningSession(
   }, [isVoiceGuidanceEnabled, resumeTracking]);
 
   // 중지
-  const stop = useCallback(async () => {
-    console.log('[RunningSession] 중지');
+  const stop = useCallback(async (saveRecord: boolean = true) => {
+    console.log('[RunningSession] 중지 (기록 저장:', saveRecord, ')');
     setStatus(RunningSessionStatus.COMPLETED);
 
     // 위치 추적 중지
@@ -265,55 +265,59 @@ export function useRunningSession(
       }
     }
 
-    // 러닝 기록 저장
-    try {
-      if (!startTimeRef.current) {
-        console.warn('[RunningSession] 시작 시간 없음, 기록 저장 생략');
-        return;
+    // 러닝 기록 저장 (saveRecord가 true일 때만)
+    if (saveRecord) {
+      try {
+        if (!startTimeRef.current) {
+          console.warn('[RunningSession] 시작 시간 없음, 기록 저장 생략');
+          return;
+        }
+
+        const endTime = new Date().toISOString();
+
+        // 위치 기록을 좌표 배열로 변환 [[lng, lat], ...]
+        const routeCoordinates = locationHistory.map(loc => [
+          loc.longitude,
+          loc.latitude,
+        ]);
+
+        // 평균 속도 계산 (m/s)
+        const avgSpeed = elapsedTime > 0 ? totalDistance / elapsedTime : 0;
+
+        // 페이스 계산 (초/km)
+        const avgPace =
+          totalDistance > 0 ? (elapsedTime / (totalDistance / 1000)) : 0;
+
+        console.log('[RunningSession] 러닝 기록 저장 시작', {
+          courseId: course.id,
+          startTime: startTimeRef.current,
+          endTime,
+          distance: totalDistance,
+          duration: elapsedTime,
+          avgPace,
+          avgSpeed,
+          routePoints: routeCoordinates.length,
+        });
+
+        await createRunningRecord({
+          courseId: course.id,
+          startTime: startTimeRef.current,
+          endTime,
+          distance: totalDistance,
+          duration: elapsedTime,
+          avgPace,
+          avgSpeed,
+          routeCoordinates,
+        });
+
+        console.log('[RunningSession] 러닝 기록 저장 완료');
+        Alert.alert('완료', '러닝 기록이 저장되었습니다.');
+      } catch (error) {
+        console.error('[RunningSession] 러닝 기록 저장 실패:', error);
+        Alert.alert('오류', '러닝 기록 저장에 실패했습니다.');
       }
-
-      const endTime = new Date().toISOString();
-
-      // 위치 기록을 좌표 배열로 변환 [[lng, lat], ...]
-      const routeCoordinates = locationHistory.map(loc => [
-        loc.longitude,
-        loc.latitude,
-      ]);
-
-      // 평균 속도 계산 (m/s)
-      const avgSpeed = elapsedTime > 0 ? totalDistance / elapsedTime : 0;
-
-      // 페이스 계산 (초/km)
-      const avgPace =
-        totalDistance > 0 ? (elapsedTime / (totalDistance / 1000)) : 0;
-
-      console.log('[RunningSession] 러닝 기록 저장 시작', {
-        courseId: course.id,
-        startTime: startTimeRef.current,
-        endTime,
-        distance: totalDistance,
-        duration: elapsedTime,
-        avgPace,
-        avgSpeed,
-        routePoints: routeCoordinates.length,
-      });
-
-      await createRunningRecord({
-        courseId: course.id,
-        startTime: startTimeRef.current,
-        endTime,
-        distance: totalDistance,
-        duration: elapsedTime,
-        avgPace,
-        avgSpeed,
-        routeCoordinates,
-      });
-
-      console.log('[RunningSession] 러닝 기록 저장 완료');
-      Alert.alert('완료', '러닝 기록이 저장되었습니다.');
-    } catch (error) {
-      console.error('[RunningSession] 러닝 기록 저장 실패:', error);
-      Alert.alert('오류', '러닝 기록 저장에 실패했습니다.');
+    } else {
+      console.log('[RunningSession] 기록 저장 생략됨');
     }
   }, [
     isVoiceGuidanceEnabled,

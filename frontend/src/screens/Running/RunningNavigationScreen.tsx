@@ -143,14 +143,21 @@ export default function RunningNavigationScreen() {
     if (status !== RunningSessionStatus.IDLE) {
       Alert.alert(
         '러닝 종료',
-        '러닝을 종료하시겠습니까?\n기록이 저장됩니다.',
+        '러닝이 종료됩니다.\n기록을 저장하시겠습니까?',
         [
           {text: '취소', style: 'cancel'},
           {
-            text: '종료',
+            text: '아니오',
             style: 'destructive',
             onPress: async () => {
-              await stop();
+              await stop(false); // 기록 저장하지 않고 종료
+              navigation.goBack();
+            },
+          },
+          {
+            text: '예',
+            onPress: async () => {
+              await stop(true); // 기록 저장하고 종료
               navigation.goBack();
             },
           },
