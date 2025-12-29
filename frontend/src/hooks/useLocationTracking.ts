@@ -1,5 +1,7 @@
 import {useState, useEffect, useRef, useCallback} from 'react';
+import {Platform, PermissionsAndroid} from 'react-native';
 import {getCurrentLocation, LocationData} from '../services/location';
+import {useCompassHeading} from './useCompassHeading';
 
 /**
  * 위치 추적 옵션
@@ -32,11 +34,44 @@ export interface LocationTrackingResult {
   errorMessage: string | null;
 
   // 제어 메서드
-  startTracking: () => void;
+  startTracking: () => Promise<void>;
   stopTracking: () => void;
   pauseTracking: () => void;
   resumeTracking: () => void;
   resetTracking: () => void;
+}
+
+/**
+ * 위치 권한 요청
+ */
+async function requestLocationPermission(): Promise<boolean> {
+  if (Platform.OS !== 'android') {
+    return true;
+  }
+
+  try {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      {
+        title: '위치 권한 요청',
+        message: '러닝 기록을 위해 위치 정보가 필요합니다.',
+        buttonNeutral: '나중에',
+        buttonNegative: '거부',
+        buttonPositive: '허용',
+      },
+    );
+
+    if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      console.log('[LocationTracking] 위치 권한 허용됨');
+      return true;
+    } else {
+      console.log('[LocationTracking] 위치 권한 거부됨');
+      return false;
+    }
+  } catch (err) {
+    console.error('[LocationTracking] 위치 권한 요청 실패:', err);
+    return false;
+  }
 }
 
 /**
@@ -152,15 +187,33 @@ export function useLocationTracking(
   const trackingInterval = useRef<NodeJS.Timeout | null>(null);
   const lastLocation = useRef<LocationData | null>(null);
 
+  // 나침반 센서 (러닝 중일 때만 활성화)
+  const compassHeading = useCompassHeading(isTracking && !isPaused);
+
   // 위치 업데이트 처리
   const handleLocationUpdate = useCallback(
     async (force: boolean = false) => {
-      if (!isTracking || isPaused) {
+      // force가 true가 아닐 때만 추적 상태 체크
+      if (!force && (!isTracking || isPaused)) {
+        console.log('[LocationTracking] 추적 비활성화 상태, 위치 업데이트 건너뜀');
         return;
       }
 
+      console.log('[LocationTracking] 위치 가져오기 시도...', {
+        isTracking,
+        isPaused,
+        force,
+      });
+
       try {
         let location = await getCurrentLocation();
+        console.log('[LocationTracking] 위치 획득 성공:', {
+          lat: location.latitude,
+          lng: location.longitude,
+          accuracy: location.accuracy,
+          heading: location.heading,
+          speed: location.speed,
+        });
 
         // 최소 이동 거리 체크
         if (lastLocation.current && !force) {
@@ -196,16 +249,25 @@ export function useLocationTracking(
             }
           }
 
-          // heading이 null이면 이동 방향 계산
+          // heading 결정 우선순위: GPS heading > 나침반 > 계산된 방향
           if (location.heading === null || location.heading === undefined) {
-            const calculatedBearing = calculateBearing(
-              lastLocation.current.latitude,
-              lastLocation.current.longitude,
-              location.latitude,
-              location.longitude,
-            );
-            location = {...location, heading: calculatedBearing};
-            console.log('[LocationTracking] 방향 계산:', calculatedBearing.toFixed(1), '도');
+            if (compassHeading !== null) {
+              // 나침반 센서 사용 (정지 시에도 작동)
+              location = {...location, heading: compassHeading};
+              console.log('[LocationTracking] 나침반 방향:', compassHeading.toFixed(1), '도');
+            } else {
+              // 이동 방향 계산 (fallback)
+              const calculatedBearing = calculateBearing(
+                lastLocation.current.latitude,
+                lastLocation.current.longitude,
+                location.latitude,
+                location.longitude,
+              );
+              location = {...location, heading: calculatedBearing};
+              console.log('[LocationTracking] 방향 계산:', calculatedBearing.toFixed(1), '도');
+            }
+          } else {
+            console.log('[LocationTracking] GPS 방향:', location.heading.toFixed(1), '도');
           }
 
           console.log('[LocationTracking] 이동:', distance.toFixed(2), 'm');
@@ -235,12 +297,22 @@ export function useLocationTracking(
         onError?.(error);
       }
     },
-    [isTracking, isPaused, minDistance, onLocationUpdate, onError],
+    [isTracking, isPaused, minDistance, onLocationUpdate, onError, compassHeading],
   );
 
   // 추적 시작
-  const startTracking = useCallback(() => {
+  const startTracking = useCallback(async () => {
     console.log('[LocationTracking] 추적 시작');
+
+    // GPS 권한 요청
+    const hasPermission = await requestLocationPermission();
+    if (!hasPermission) {
+      console.error('[LocationTracking] 위치 권한 없음');
+      setIsError(true);
+      setErrorMessage('위치 권한이 필요합니다');
+      return;
+    }
+
     setIsTracking(true);
     setIsPaused(false);
 

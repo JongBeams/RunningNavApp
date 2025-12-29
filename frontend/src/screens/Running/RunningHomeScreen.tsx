@@ -229,8 +229,6 @@ export default function RunningHomeScreen() {
       <View style={styles.mapPlaceholder}>
         <KakaoMapWebView
           key={selectedCourse?.id || 'no-course'}
-          centerLat={startCoords?.lat}
-          centerLng={startCoords?.lng}
           routePath={routePath}
           startLat={startCoords?.lat}
           startLng={startCoords?.lng}

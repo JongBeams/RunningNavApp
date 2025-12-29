@@ -232,6 +232,22 @@ export default function RunningNavigationScreen() {
             <Text style={styles.courseName}>{course.name}</Text>
           </View>
 
+          {/* 디버그: 현재 좌표 표시 */}
+          <View style={styles.debugContainer}>
+            <Text style={styles.debugText}>
+              상태: {status}
+            </Text>
+            <Text style={styles.debugText}>
+              위도: {currentLat?.toFixed(6) || 'null'}
+            </Text>
+            <Text style={styles.debugText}>
+              경도: {currentLng?.toFixed(6) || 'null'}
+            </Text>
+            <Text style={styles.debugText}>
+              방향: {currentHeading?.toFixed(1) || 'null'}°
+            </Text>
+          </View>
+
           {/* 경로 이탈 경고 */}
           {isOffRoute && (
             <View style={styles.warningContainer}>
@@ -344,6 +360,19 @@ const styles = StyleSheet.create({
     fontSize: fontSize.lg,
     fontWeight: '700',
     color: colors.white,
+  },
+  debugContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: 8,
+    marginTop: spacing.sm,
+  },
+  debugText: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: colors.white,
+    fontFamily: 'monospace',
   },
   warningContainer: {
     backgroundColor: 'rgba(255, 59, 48, 0.9)',

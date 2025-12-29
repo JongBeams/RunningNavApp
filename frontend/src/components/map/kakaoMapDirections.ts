@@ -300,7 +300,9 @@ export const getKakaoMapDirectionsHtml = (
             var position = new kakao.maps.LatLng(lat, lng);
 
             // 빨간 원 기본 스타일 (네이버 지도 스타일 - 작고 단색)
-            var circleHtml = '<div style="position: absolute; top: 0; left: 0; width: 16px; height: 16px; ' +
+            var circleHtml = '<div style="position: absolute; top: 50%; left: 50%; ' +
+                'transform: translate(-50%, -50%); ' +
+                'width: 16px; height: 16px; ' +
                 'background-color: #FF0000; ' +
                 'border: 2px solid #FFFFFF; ' +
                 'border-radius: 50%; ' +
@@ -308,18 +310,21 @@ export const getKakaoMapDirectionsHtml = (
 
             var content;
 
-            // heading이 있으면 방향 화살표 추가
+            // heading이 있으면 방향 화살표 추가 (원 앞쪽에 배치)
             if (heading !== null && heading !== undefined) {
-                content = '<div style="position: relative; width: 16px; height: 16px;">' +
-                    circleHtml +
-                    '<div style="position: absolute; top: 50%; left: 50%; ' +
+                // 화살표를 원의 중심에서 20px 앞으로 이동
+                var arrowHtml = '<div style="position: absolute; top: 50%; left: 50%; ' +
                     'width: 0; height: 0; ' +
-                    'border-left: 4px solid transparent; ' +
-                    'border-right: 4px solid transparent; ' +
-                    'border-bottom: 10px solid #FFFFFF; ' +
-                    'transform: translate(-50%, -50%) rotate(' + heading + 'deg); ' +
-                    'transform-origin: center center; ' +
-                    'filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));"></div>' +
+                    'border-left: 5px solid transparent; ' +
+                    'border-right: 5px solid transparent; ' +
+                    'border-bottom: 12px solid #FF0000; ' +
+                    'transform: translate(-50%, -50%) translateY(-20px) rotate(' + heading + 'deg); ' +
+                    'transform-origin: center 20px; ' +
+                    'filter: drop-shadow(0 0 2px rgba(255,255,255,0.8));"></div>';
+
+                content = '<div style="position: relative; width: 60px; height: 60px;">' +
+                    circleHtml +
+                    arrowHtml +
                     '</div>';
                 console.log('[KakaoMap] 현재 위치 마커 표시 (방향):', lat, lng, 'heading:', heading);
             } else {

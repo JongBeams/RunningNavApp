@@ -1,4 +1,4 @@
-import React, {useRef, useEffect, useState} from 'react';
+import React, {useRef, useEffect, useState, useMemo} from 'react';
 import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
 import {WebView} from 'react-native-webview';
 import {getKakaoMapDirectionsHtml, KAKAO_APP_KEY} from './kakaoMapDirections';
@@ -41,15 +41,16 @@ export default function KakaoMapWebView({
 }: KakaoMapWebViewProps) {
   const webViewRef = useRef<WebView>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentLocation, setCurrentLocation] = useState<{
+  const [initialLocation, setInitialLocation] = useState<{
     lat: number;
     lng: number;
-  } | null>(null);
+  } | null>(null); // WebView 생성용 (한 번만 설정)
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
 
+  // 초기 위치 설정 (한 번만 실행)
   useEffect(() => {
     const fetchLocation = async () => {
       // 실제 사용자 위치 가져오기
@@ -60,10 +61,10 @@ export default function KakaoMapWebView({
 
         // centerLat, centerLng가 제공되면 지도 중심으로 사용
         if (centerLat !== undefined && centerLng !== undefined) {
-          setCurrentLocation({lat: centerLat, lng: centerLng});
+          setInitialLocation({lat: centerLat, lng: centerLng});
         } else {
           // 중심 좌표가 없으면 사용자 위치를 중심으로
-          setCurrentLocation(userLoc);
+          setInitialLocation(userLoc);
         }
       } catch (error) {
         console.warn('Failed to get current location, using default:', error);
@@ -71,15 +72,18 @@ export default function KakaoMapWebView({
         setUserLocation(defaultLoc);
 
         if (centerLat !== undefined && centerLng !== undefined) {
-          setCurrentLocation({lat: centerLat, lng: centerLng});
+          setInitialLocation({lat: centerLat, lng: centerLng});
         } else {
-          setCurrentLocation(defaultLoc);
+          setInitialLocation(defaultLoc);
         }
       }
     };
 
-    fetchLocation();
-  }, [centerLat, centerLng]);
+    // 초기 위치가 아직 설정되지 않았을 때만 실행
+    if (!initialLocation) {
+      fetchLocation();
+    }
+  }, [centerLat, centerLng, initialLocation]);
 
   // 경로가 변경되면 WebView에 전달
   useEffect(() => {
@@ -119,6 +123,15 @@ export default function KakaoMapWebView({
 
   // 현재 위치 마커 표시 (초기 + 실시간 갱신)
   useEffect(() => {
+    console.log('[KakaoMapWebView] 현재 위치 마커 useEffect 실행:', {
+      showCurrentLocation,
+      isLoading,
+      centerLat,
+      centerLng,
+      heading,
+      hasWebView: !!webViewRef.current,
+    });
+
     if (
       showCurrentLocation &&
       webViewRef.current &&
@@ -136,9 +149,11 @@ export default function KakaoMapWebView({
             type: 'showCurrentLocation',
             lat,
             lng,
-            heading: heading !== undefined ? heading : null,
+            heading: heading !== undefined && heading !== null ? heading : null,
           }),
         );
+      } else {
+        console.log('[KakaoMapWebView] 현재 위치 마커 업데이트 실패: lat 또는 lng 없음');
       }
     }
   }, [showCurrentLocation, userLocation, centerLat, centerLng, heading, isLoading]);
@@ -163,8 +178,20 @@ export default function KakaoMapWebView({
     }
   };
 
+  // HTML을 한 번만 생성 (WebView 리렌더링 방지)
+  const mapHtml = useMemo(() => {
+    if (!initialLocation) return null;
+
+    return getKakaoMapDirectionsHtml(
+      appKey,
+      initialLocation.lat,
+      initialLocation.lng,
+      initialZoom,
+    );
+  }, [appKey, initialLocation, initialZoom]);
+
   // Wait for location before rendering map
-  if (!currentLocation) {
+  if (!initialLocation || !mapHtml) {
     return (
       <View style={styles.container}>
         <View style={styles.loadingOverlay}>
@@ -181,12 +208,7 @@ export default function KakaoMapWebView({
         ref={webViewRef}
         style={styles.map}
         source={{
-          html: getKakaoMapDirectionsHtml(
-            appKey,
-            currentLocation.lat,
-            currentLocation.lng,
-            initialZoom,
-          ),
+          html: mapHtml,
           baseUrl: 'http://10.0.2.2',
         }}
         onMessage={handleMessage}

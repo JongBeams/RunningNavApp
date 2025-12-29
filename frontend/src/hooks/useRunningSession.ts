@@ -189,8 +189,10 @@ export function useRunningSession(
     // 시작 시간 기록 (ISO 8601 format)
     startTimeRef.current = new Date().toISOString();
 
-    // 위치 추적 시작
-    startTracking();
+    // 위치 추적 시작 (권한 요청 포함)
+    console.log('[RunningSession] 위치 추적 시작 중...');
+    await startTracking();
+    console.log('[RunningSession] 위치 추적 시작 완료');
 
     // 음성 안내 (에러 방지)
     if (isVoiceGuidanceEnabled) {
