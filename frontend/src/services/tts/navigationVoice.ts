@@ -73,7 +73,7 @@ export class NavigationVoice {
    * 경로 이탈 안내
    */
   static async announceOffRoute(): Promise<void> {
-    const message = '경로를 벗어났습니다. 경로로 돌아가세요.';
+    const message = '현재 잘못된 경로로 이동 중입니다.';
     await ttsService.speak(message);
   }
 
@@ -82,6 +82,26 @@ export class NavigationVoice {
    */
   static async announceBackOnRoute(): Promise<void> {
     const message = '경로로 돌아왔습니다.';
+    await ttsService.speak(message);
+  }
+
+  /**
+   * 경로 복귀 방향 안내
+   */
+  static async announceReturnToRoute(
+    direction: 'forward' | 'backward' | 'left' | 'right',
+    distance: number,
+  ): Promise<void> {
+    const directionText = {
+      forward: '앞쪽',
+      backward: '뒤쪽',
+      left: '좌측',
+      right: '우측',
+    }[direction];
+
+    const distanceText = Math.round(distance);
+
+    const message = `${directionText}으로 ${distanceText}미터 이동하세요.`;
     await ttsService.speak(message);
   }
 

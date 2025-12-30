@@ -19,6 +19,8 @@ import {
 import KakaoMapWebView from '../../components/map/KakaoMapWebView';
 import {geoJsonToWaypoints} from '../../services/api/courseApi';
 import useRunningSession, {RunningSessionStatus} from '../../hooks/useRunningSession';
+import useLocationTracking from '../../hooks/useLocationTracking';
+import {calculateDistance} from '../../utils/geoUtils';
 
 type RunningNavigationScreenNav = NativeStackNavigationProp<
   RootStackParamList,
@@ -45,6 +47,13 @@ export default function RunningNavigationScreen() {
 
   const {course} = route.params;
 
+  // 미리보기용 위치 추적 (IDLE 상태에서도 작동)
+  const previewTracking = useLocationTracking({
+    updateInterval: 1000,
+    minDistance: 0, // 미리보기는 거리 제한 없이 모든 위치 표시
+    enabled: false,
+  });
+
   // 러닝 세션 Hook
   const {
     status,
@@ -60,6 +69,17 @@ export default function RunningNavigationScreen() {
     toggleVoiceGuidance,
     isVoiceGuidanceEnabled,
   } = useRunningSession(course);
+
+  // 화면 진입 시 미리보기 추적 시작
+  useEffect(() => {
+    console.log('[RunningNav] 미리보기 위치 추적 시작');
+    previewTracking.startTracking();
+
+    return () => {
+      console.log('[RunningNav] 미리보기 위치 추적 중지');
+      previewTracking.stopTracking();
+    };
+  }, []);
 
   // 디버그: 위치 변경 감지
   useEffect(() => {
@@ -134,6 +154,42 @@ export default function RunningNavigationScreen() {
 
   // 러닝 시작
   const handleStart = async () => {
+    // 1. 현재 위치 확인
+    const currentLat = previewTracking.currentLocation?.latitude;
+    const currentLng = previewTracking.currentLocation?.longitude;
+
+    if (!currentLat || !currentLng) {
+      Alert.alert('알림', '현재 위치를 가져올 수 없습니다.\n잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    // 2. 출발지점 좌표
+    const startCoords = getStartCoordinates();
+    if (!startCoords) {
+      Alert.alert('오류', '출발지 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    // 3. 거리 계산
+    const distanceToStart = calculateDistance(
+      currentLat,
+      currentLng,
+      startCoords.lat,
+      startCoords.lng,
+    );
+
+    console.log('[RunningNav] 출발지까지 거리:', distanceToStart.toFixed(1), 'm');
+
+    // 4. 50m 이상이면 차단
+    if (distanceToStart > 50) {
+      Alert.alert(
+        '출발 불가',
+        `출발 지점에 위치하고 있지 않습니다.\n\n현재 거리: ${distanceToStart.toFixed(0)}m\n출발지로 이동해주세요.`,
+      );
+      return;
+    }
+
+    // 5. 러닝 시작
     await start();
   };
 
@@ -214,24 +270,31 @@ export default function RunningNavigationScreen() {
   const isIdle = status === RunningSessionStatus.IDLE;
   const isPaused = status === RunningSessionStatus.PAUSED;
 
+  // 표시할 위치 결정: IDLE이면 미리보기, 아니면 세션 위치
+  const displayLat = isIdle
+    ? previewTracking.currentLocation?.latitude
+    : currentLat;
+  const displayLng = isIdle
+    ? previewTracking.currentLocation?.longitude
+    : currentLng;
+  const displayHeading = isIdle
+    ? previewTracking.currentLocation?.heading
+    : currentHeading;
+
   return (
     <View style={commonStyles.container}>
       {/* 지도 영역 */}
       <View style={styles.mapContainer}>
         <KakaoMapWebView
-          centerLat={
-            isIdle || !currentLat ? startCoords?.lat : currentLat
-          }
-          centerLng={
-            isIdle || !currentLng ? startCoords?.lng : currentLng
-          }
+          centerLat={displayLat || startCoords?.lat}
+          centerLng={displayLng || startCoords?.lng}
           routePath={routePath}
           startLat={startCoords?.lat}
           startLng={startCoords?.lng}
           endLat={endCoords?.lat}
           endLng={endCoords?.lng}
           showCurrentLocation={true}
-          heading={currentHeading}
+          heading={displayHeading}
           initialZoom={3}
         />
 
@@ -247,13 +310,16 @@ export default function RunningNavigationScreen() {
               상태: {status}
             </Text>
             <Text style={styles.debugText}>
-              위도: {currentLat?.toFixed(6) || 'null'}
+              위도: {displayLat?.toFixed(6) || 'null'}
             </Text>
             <Text style={styles.debugText}>
-              경도: {currentLng?.toFixed(6) || 'null'}
+              경도: {displayLng?.toFixed(6) || 'null'}
             </Text>
             <Text style={styles.debugText}>
-              방향: {currentHeading?.toFixed(1) || 'null'}°
+              방향: {displayHeading?.toFixed(1) || 'null'}°
+            </Text>
+            <Text style={styles.debugText}>
+              소스: {isIdle ? '미리보기' : '러닝 세션'}
             </Text>
           </View>
 
