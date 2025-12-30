@@ -308,8 +308,12 @@ export const getKakaoMapDirectionsHtml = (
                 var radius = 40; // 부채꼴 반지름 (px)
 
                 // 부채꼴을 그리기 위한 좌표 계산
-                var startAngle = heading - viewAngle / 2 - 90; // SVG는 12시 방향이 -90도
-                var endAngle = heading + viewAngle / 2 - 90;
+                // 나침반: 0도=북쪽, 90도=동쪽, 180도=남쪽, 270도=서쪽
+                // SVG: 0도=3시(동쪽), 90도=6시(남쪽), 180도=9시(서쪽), 270도=12시(북쪽)
+                // 변환: SVG각도 = (나침반각도 + 270) % 360
+                // 예: 북쪽(0°) → 270°, 동쪽(90°) → 360°=0°, 남쪽(180°) → 90°, 서쪽(270°) → 180°
+                var startAngle = ((heading - viewAngle / 2) + 270) % 360;
+                var endAngle = ((heading + viewAngle / 2) + 270) % 360;
 
                 var startX = 50 + radius * Math.cos(startAngle * Math.PI / 180);
                 var startY = 50 + radius * Math.sin(startAngle * Math.PI / 180);
