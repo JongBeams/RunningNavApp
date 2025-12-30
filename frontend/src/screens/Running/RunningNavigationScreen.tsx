@@ -61,6 +61,15 @@ export default function RunningNavigationScreen() {
     isVoiceGuidanceEnabled,
   } = useRunningSession(course);
 
+  // 디버그: 위치 변경 감지
+  useEffect(() => {
+    console.log('[RunningNav] 위치 업데이트:', {
+      currentLat,
+      currentLng,
+      currentHeading,
+    });
+  }, [currentLat, currentLng, currentHeading]);
+
   // 코스 정보 파싱
   const startCoords = getStartCoordinates();
   const endCoords = getEndCoordinates();

@@ -1,5 +1,6 @@
 import {useState, useEffect, useRef, useCallback} from 'react';
 import {Platform, PermissionsAndroid} from 'react-native';
+import Geolocation from '@react-native-community/geolocation';
 import {getCurrentLocation, LocationData} from '../services/location';
 import {useCompassHeading} from './useCompassHeading';
 
@@ -184,112 +185,116 @@ export function useLocationTracking(
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Refs
-  const trackingInterval = useRef<NodeJS.Timeout | null>(null);
+  const watchId = useRef<number | null>(null); // watchPosition ID
   const lastLocation = useRef<LocationData | null>(null);
 
   // 나침반 센서 (러닝 중일 때만 활성화)
   const compassHeading = useCompassHeading(isTracking && !isPaused);
 
-  // 위치 업데이트 처리
-  const handleLocationUpdate = useCallback(
-    async (force: boolean = false) => {
-      // force가 true가 아닐 때만 추적 상태 체크
-      if (!force && (!isTracking || isPaused)) {
-        console.log('[LocationTracking] 추적 비활성화 상태, 위치 업데이트 건너뜀');
-        return;
-      }
-
-      console.log('[LocationTracking] 위치 가져오기 시도...', {
-        isTracking,
-        isPaused,
-        force,
+  // 위치 데이터 처리 (watchPosition 콜백에서 사용)
+  const processLocation = useCallback(
+    (location: LocationData) => {
+      console.log('[LocationTracking] 위치 처리:', {
+        lat: location.latitude,
+        lng: location.longitude,
+        accuracy: location.accuracy,
+        heading: location.heading,
+        speed: location.speed,
       });
 
-      try {
-        let location = await getCurrentLocation();
-        console.log('[LocationTracking] 위치 획득 성공:', {
-          lat: location.latitude,
-          lng: location.longitude,
-          accuracy: location.accuracy,
-          heading: location.heading,
-          speed: location.speed,
-        });
+      // 첫 위치인 경우 나침반 방향 사용
+      if (!lastLocation.current && compassHeading !== null) {
+        location = {...location, heading: compassHeading};
+        console.log('[LocationTracking] 첫 위치 - 나침반 방향 사용:', compassHeading.toFixed(1), '도');
+      }
 
-        // 최소 이동 거리 체크
-        if (lastLocation.current && !force) {
-          const distance = calculateDistance(
+      // 최소 이동 거리 체크
+      if (lastLocation.current) {
+        const distance = calculateDistance(
+          lastLocation.current.latitude,
+          lastLocation.current.longitude,
+          location.latitude,
+          location.longitude,
+        );
+
+        if (distance < minDistance) {
+          console.log('[LocationTracking] 이동 거리 부족:', distance.toFixed(2), 'm');
+          return;
+        }
+
+        // 거리 누적
+        setTotalDistance(prev => prev + distance);
+
+        // 속도 계산 (m/s)
+        if (location.speed !== undefined && location.speed !== null) {
+          setCurrentSpeed(location.speed);
+        } else {
+          const timeDiff = (location.timestamp - lastLocation.current.timestamp) / 1000;
+          if (timeDiff > 0) {
+            const speed = distance / timeDiff;
+            setCurrentSpeed(speed);
+          }
+        }
+
+        // heading 결정 우선순위
+        const currentSpeed = location.speed || 0;
+        const isMovingFast = currentSpeed > 0.5;
+
+        if (isMovingFast && location.heading !== null && location.heading !== undefined) {
+          console.log('[LocationTracking] GPS 방향:', location.heading.toFixed(1), '도 (속도:', currentSpeed.toFixed(2), 'm/s)');
+        } else if (compassHeading !== null) {
+          location = {...location, heading: compassHeading};
+          console.log('[LocationTracking] 나침반 방향:', compassHeading.toFixed(1), '도 (속도:', currentSpeed.toFixed(2), 'm/s)');
+        } else if (lastLocation.current) {
+          const calculatedBearing = calculateBearing(
             lastLocation.current.latitude,
             lastLocation.current.longitude,
             location.latitude,
             location.longitude,
           );
-
-          if (distance < minDistance) {
-            console.log(
-              '[LocationTracking] 이동 거리 부족:',
-              distance.toFixed(2),
-              'm',
-            );
-            return;
-          }
-
-          // 거리 누적
-          setTotalDistance(prev => prev + distance);
-
-          // 속도 계산 (m/s)
-          if (location.speed !== undefined && location.speed !== null) {
-            setCurrentSpeed(location.speed);
-          } else {
-            // speed 정보가 없으면 시간 차이로 계산
-            const timeDiff =
-              (location.timestamp - lastLocation.current.timestamp) / 1000; // 초
-            if (timeDiff > 0) {
-              const speed = distance / timeDiff;
-              setCurrentSpeed(speed);
-            }
-          }
-
-          // heading 결정 우선순위: GPS heading > 나침반 > 계산된 방향
-          if (location.heading === null || location.heading === undefined) {
-            if (compassHeading !== null) {
-              // 나침반 센서 사용 (정지 시에도 작동)
-              location = {...location, heading: compassHeading};
-              console.log('[LocationTracking] 나침반 방향:', compassHeading.toFixed(1), '도');
-            } else {
-              // 이동 방향 계산 (fallback)
-              const calculatedBearing = calculateBearing(
-                lastLocation.current.latitude,
-                lastLocation.current.longitude,
-                location.latitude,
-                location.longitude,
-              );
-              location = {...location, heading: calculatedBearing};
-              console.log('[LocationTracking] 방향 계산:', calculatedBearing.toFixed(1), '도');
-            }
-          } else {
-            console.log('[LocationTracking] GPS 방향:', location.heading.toFixed(1), '도');
-          }
-
-          console.log('[LocationTracking] 이동:', distance.toFixed(2), 'm');
+          location = {...location, heading: calculatedBearing};
+          console.log('[LocationTracking] 방향 계산:', calculatedBearing.toFixed(1), '도');
+        } else {
+          console.log('[LocationTracking] 방향 정보 없음');
         }
 
-        // 위치 업데이트
-        setCurrentLocation(location);
-        setLocationHistory(prev => [...prev, location]);
-        lastLocation.current = location;
-        setIsError(false);
-        setErrorMessage(null);
+        console.log('[LocationTracking] 이동:', distance.toFixed(2), 'm');
+      }
 
-        // 콜백 호출
-        onLocationUpdate?.(location);
+      // 위치 업데이트
+      setCurrentLocation(location);
+      setLocationHistory(prev => [...prev, location]);
+      lastLocation.current = location;
+      setIsError(false);
+      setErrorMessage(null);
 
-        console.log('[LocationTracking] 위치 업데이트:', {
-          lat: location.latitude,
-          lng: location.longitude,
-          accuracy: location.accuracy,
-          speed: location.speed,
-          heading: location.heading,
-        });
+      // 콜백 호출
+      onLocationUpdate?.(location);
+
+      console.log('[LocationTracking] 위치 업데이트:', {
+        lat: location.latitude,
+        lng: location.longitude,
+        accuracy: location.accuracy,
+        speed: location.speed,
+        heading: location.heading,
+      });
+    },
+    [minDistance, onLocationUpdate, compassHeading],
+  );
+
+  // 위치 업데이트 처리 (수동 호출용 - 첫 위치 가져오기)
+  const handleLocationUpdate = useCallback(
+    async (force: boolean = false) => {
+      if (!force && (!isTracking || isPaused)) {
+        console.log('[LocationTracking] 추적 비활성화 상태, 위치 업데이트 건너뜀');
+        return;
+      }
+
+      console.log('[LocationTracking] 수동 위치 가져오기...');
+
+      try {
+        const location = await getCurrentLocation();
+        processLocation(location);
       } catch (error: any) {
         console.error('[LocationTracking] 위치 업데이트 실패:', error);
         setIsError(true);
@@ -297,7 +302,7 @@ export function useLocationTracking(
         onError?.(error);
       }
     },
-    [isTracking, isPaused, minDistance, onLocationUpdate, onError, compassHeading],
+    [isTracking, isPaused, processLocation, onError],
   );
 
   // 추적 시작
@@ -326,9 +331,10 @@ export function useLocationTracking(
     setIsTracking(false);
     setIsPaused(false);
 
-    if (trackingInterval.current) {
-      clearInterval(trackingInterval.current);
-      trackingInterval.current = null;
+    if (watchId.current !== null) {
+      Geolocation.clearWatch(watchId.current);
+      watchId.current = null;
+      console.log('[LocationTracking] watchPosition 중지');
     }
   }, []);
 
@@ -359,26 +365,73 @@ export function useLocationTracking(
     lastLocation.current = null;
   }, []);
 
-  // 주기적인 위치 업데이트
+  // watchPosition으로 실시간 위치 추적
   useEffect(() => {
+    console.log('[LocationTracking] watchPosition useEffect 실행:', {
+      isTracking,
+      isPaused,
+      updateInterval,
+    });
+
     if (isTracking && !isPaused) {
-      trackingInterval.current = setInterval(() => {
-        handleLocationUpdate();
-      }, updateInterval);
+      console.log('[LocationTracking] watchPosition 시작');
+
+      watchId.current = Geolocation.watchPosition(
+        (position) => {
+          console.log('[LocationTracking] watchPosition 콜백 실행');
+
+          const location: LocationData = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            altitude: position.coords.altitude,
+            accuracy: position.coords.accuracy,
+            altitudeAccuracy: position.coords.altitudeAccuracy,
+            heading: position.coords.heading,
+            speed: position.coords.speed,
+            timestamp: position.timestamp,
+          };
+
+          // 위치 처리 (handleLocationUpdate의 핵심 로직 사용)
+          processLocation(location);
+        },
+        (error) => {
+          console.error('[LocationTracking] watchPosition 에러:', error);
+          setIsError(true);
+          setErrorMessage(error.message);
+        },
+        {
+          enableHighAccuracy: true,
+          distanceFilter: minDistance,
+          interval: updateInterval,
+          fastestInterval: updateInterval,
+          timeout: 20000,
+          maximumAge: 10000,
+        },
+      );
 
       return () => {
-        if (trackingInterval.current) {
-          clearInterval(trackingInterval.current);
+        console.log('[LocationTracking] watchPosition 정리');
+        if (watchId.current !== null) {
+          Geolocation.clearWatch(watchId.current);
+          watchId.current = null;
         }
       };
+    } else {
+      console.log('[LocationTracking] watchPosition 시작 조건 미충족');
+      // 추적 중지 시 watch 정리
+      if (watchId.current !== null) {
+        console.log('[LocationTracking] 기존 watchPosition 정리');
+        Geolocation.clearWatch(watchId.current);
+        watchId.current = null;
+      }
     }
-  }, [isTracking, isPaused, updateInterval, handleLocationUpdate]);
+  }, [isTracking, isPaused, updateInterval, minDistance]);
 
   // 컴포넌트 언마운트 시 정리
   useEffect(() => {
     return () => {
-      if (trackingInterval.current) {
-        clearInterval(trackingInterval.current);
+      if (watchId.current !== null) {
+        Geolocation.clearWatch(watchId.current);
       }
     };
   }, []);

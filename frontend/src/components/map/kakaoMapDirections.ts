@@ -299,37 +299,52 @@ export const getKakaoMapDirectionsHtml = (
 
             var position = new kakao.maps.LatLng(lat, lng);
 
-            // 빨간 원 기본 스타일 (네이버 지도 스타일 - 작고 단색)
-            var circleHtml = '<div style="position: absolute; top: 50%; left: 50%; ' +
-                'transform: translate(-50%, -50%); ' +
-                'width: 16px; height: 16px; ' +
-                'background-color: #FF0000; ' +
-                'border: 2px solid #FFFFFF; ' +
-                'border-radius: 50%; ' +
-                'box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>';
-
             var content;
 
-            // heading이 있으면 방향 화살표 추가 (원 앞쪽에 배치)
+            // heading이 있으면 부채꼴 시야 범위 + 빨간 원 표시
             if (heading !== null && heading !== undefined) {
-                // 화살표를 원의 중심에서 20px 앞으로 이동
-                var arrowHtml = '<div style="position: absolute; top: 50%; left: 50%; ' +
-                    'width: 0; height: 0; ' +
-                    'border-left: 5px solid transparent; ' +
-                    'border-right: 5px solid transparent; ' +
-                    'border-bottom: 12px solid #FF0000; ' +
-                    'transform: translate(-50%, -50%) translateY(-20px) rotate(' + heading + 'deg); ' +
-                    'transform-origin: center 20px; ' +
-                    'filter: drop-shadow(0 0 2px rgba(255,255,255,0.8));"></div>';
+                // SVG로 부채꼴 그리기 (60도 시야각)
+                var viewAngle = 60; // 시야각 (도)
+                var radius = 40; // 부채꼴 반지름 (px)
 
-                content = '<div style="position: relative; width: 60px; height: 60px;">' +
-                    circleHtml +
-                    arrowHtml +
+                // 부채꼴을 그리기 위한 좌표 계산
+                var startAngle = heading - viewAngle / 2 - 90; // SVG는 12시 방향이 -90도
+                var endAngle = heading + viewAngle / 2 - 90;
+
+                var startX = 50 + radius * Math.cos(startAngle * Math.PI / 180);
+                var startY = 50 + radius * Math.sin(startAngle * Math.PI / 180);
+                var endX = 50 + radius * Math.cos(endAngle * Math.PI / 180);
+                var endY = 50 + radius * Math.sin(endAngle * Math.PI / 180);
+
+                content = '<div style="position: relative; width: 100px; height: 100px;">' +
+                    // 부채꼴 (반투명 빨간색)
+                    '<svg width="100" height="100" style="position: absolute; top: 0; left: 0;">' +
+                    '<path d="M 50 50 L ' + startX + ' ' + startY +
+                    ' A ' + radius + ' ' + radius + ' 0 0 1 ' + endX + ' ' + endY + ' Z" ' +
+                    'fill="rgba(255, 0, 0, 0.25)" stroke="rgba(255, 0, 0, 0.4)" stroke-width="1"/>' +
+                    '</svg>' +
+                    // 중앙 빨간 원 (네이버 지도 스타일)
+                    '<div style="position: absolute; top: 50%; left: 50%; ' +
+                    'transform: translate(-50%, -50%); ' +
+                    'width: 16px; height: 16px; ' +
+                    'background-color: #FF0000; ' +
+                    'border: 2px solid #FFFFFF; ' +
+                    'border-radius: 50%; ' +
+                    'box-shadow: 0 2px 4px rgba(0,0,0,0.3); ' +
+                    'z-index: 10;"></div>' +
                     '</div>';
-                console.log('[KakaoMap] 현재 위치 마커 표시 (방향):', lat, lng, 'heading:', heading);
+                console.log('[KakaoMap] 현재 위치 마커 표시 (시야 범위):', lat, lng, 'heading:', heading);
             } else {
                 // 방향 정보 없으면 빨간 원만 표시
-                content = '<div style="position: relative; width: 16px; height: 16px;">' + circleHtml + '</div>';
+                content = '<div style="position: relative; width: 16px; height: 16px;">' +
+                    '<div style="position: absolute; top: 50%; left: 50%; ' +
+                    'transform: translate(-50%, -50%); ' +
+                    'width: 16px; height: 16px; ' +
+                    'background-color: #FF0000; ' +
+                    'border: 2px solid #FFFFFF; ' +
+                    'border-radius: 50%; ' +
+                    'box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>' +
+                    '</div>';
                 console.log('[KakaoMap] 현재 위치 마커 표시 (원):', lat, lng);
             }
 

@@ -118,7 +118,7 @@ export function useRunningSession(
     pauseTracking,
     resumeTracking,
   } = useLocationTracking({
-    updateInterval: 3000,
+    updateInterval: 1000, // 1초마다 위치 갱신
     minDistance: 5,
     enabled: false,
     onLocationUpdate: async location => {
@@ -163,15 +163,29 @@ export function useRunningSession(
   // 타이머
   useEffect(() => {
     if (status === RunningSessionStatus.RUNNING) {
+      console.log('[RunningSession] 타이머 시작');
       timerRef.current = setInterval(() => {
-        setElapsedTime(prev => prev + 1);
+        setElapsedTime(prev => {
+          const newTime = prev + 1;
+          console.log('[RunningSession] 경과 시간:', newTime, '초');
+          return newTime;
+        });
       }, 1000);
 
       return () => {
+        console.log('[RunningSession] 타이머 정리');
         if (timerRef.current) {
           clearInterval(timerRef.current);
+          timerRef.current = null;
         }
       };
+    } else if (status === RunningSessionStatus.PAUSED) {
+      // 일시정지 시 타이머만 멈춤 (elapsedTime은 유지)
+      console.log('[RunningSession] 타이머 일시정지');
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     }
   }, [status]);
 
@@ -364,6 +378,15 @@ export function useRunningSession(
     progress: calculateProgress(),
     distanceToNext,
   };
+
+  // 디버그: currentLocation 변경 감지
+  useEffect(() => {
+    console.log('[RunningSession] currentLocation 변경:', {
+      lat: currentLocation?.latitude,
+      lng: currentLocation?.longitude,
+      heading: currentLocation?.heading,
+    });
+  }, [currentLocation]);
 
   // 컴포넌트 언마운트 시 정리
   useEffect(() => {
