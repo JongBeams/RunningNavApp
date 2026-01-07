@@ -40,6 +40,7 @@ export interface LocationTrackingResult {
   pauseTracking: () => void;
   resumeTracking: () => void;
   resetTracking: () => void;
+  setInitialLocation: (location: LocationData) => void;
 }
 
 /**
@@ -273,13 +274,17 @@ export function useLocationTracking(
           console.log('[LocationTracking] 이동 거리 부족, 방향만 업데이트:', distance.toFixed(2), 'm');
 
           // 방향 정보는 업데이트 (거리는 누적하지 않음)
-          setCurrentLocation({
+          const updatedLocation = {
             ...lastLocation.current,
             heading: location.heading,
             timestamp: location.timestamp,
             speed: location.speed,
             accuracy: location.accuracy,
-          });
+          };
+          setCurrentLocation(updatedLocation);
+
+          // ✅ FIX: minDistance 미만이어도 콜백 호출 (경로 안내 위해 필수)
+          onLocationUpdate?.(updatedLocation);
           return;
         }
 
@@ -384,6 +389,17 @@ export function useLocationTracking(
     lastLocation.current = null;
   }, []);
 
+  // 초기 위치 설정 (GPS 초기화 지연 방지용)
+  const setInitialLocation = useCallback((location: LocationData) => {
+    console.log('[LocationTracking] 초기 위치 설정:', {
+      lat: location.latitude,
+      lng: location.longitude,
+      heading: location.heading,
+    });
+    setCurrentLocation(location);
+    lastLocation.current = location;
+  }, []);
+
   // watchPosition으로 실시간 위치 추적
   useEffect(() => {
     console.log('[LocationTracking] watchPosition useEffect 실행:', {
@@ -479,6 +495,7 @@ export function useLocationTracking(
     pauseTracking,
     resumeTracking,
     resetTracking,
+    setInitialLocation,
   };
 }
 

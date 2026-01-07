@@ -43,10 +43,10 @@ export interface UseRunningSessionReturn {
   currentHeading: number | null | undefined;
 
   // 제어 메서드
-  start: () => Promise<void>;
+  start: (initialLocation?: {latitude: number; longitude: number; heading?: number | null}) => Promise<void>;
   pause: () => Promise<void>;
   resume: () => Promise<void>;
-  stop: (saveRecord?: boolean) => Promise<void>;
+  stop: (saveRecord?: boolean, isCompleted?: boolean) => Promise<void>;
 
   // 설정
   toggleVoiceGuidance: () => void;
@@ -117,6 +117,7 @@ export function useRunningSession(
     stopTracking,
     pauseTracking,
     resumeTracking,
+    setInitialLocation,
   } = useLocationTracking({
     updateInterval: 1000, // 1초마다 위치 갱신
     minDistance: 5,
@@ -124,7 +125,7 @@ export function useRunningSession(
     onLocationUpdate: async location => {
       // 위치 업데이트 시 경로 안내 업데이트
       if (routeGuidanceRef.current && status === RunningSessionStatus.RUNNING) {
-        await routeGuidanceRef.current.updateLocation(
+        const isCompleted = await routeGuidanceRef.current.updateLocation(
           location,
           totalDistance,
           elapsedTime,
@@ -135,6 +136,13 @@ export function useRunningSession(
         setCurrentWaypointIndex(guidanceState.currentWaypointIndex);
         setDistanceToNext(guidanceState.distanceToNextWaypoint);
         setIsOffRoute(guidanceState.isOffRoute);
+
+        // ✅ 완주 처리
+        if (isCompleted) {
+          console.log('[RunningSession] 코스 완주!');
+          // 자동으로 stop 호출 (기록 저장, 완주 처리)
+          await stop(true, true);
+        }
       }
     },
   });
@@ -151,6 +159,7 @@ export function useRunningSession(
         routePath,
         {
           enableVoiceGuidance: isVoiceGuidanceEnabled,
+          offRouteThreshold: 5, // ✅ FIX: 경로 이탈 판정 거리를 5m로 설정 (GPS 오차 및 도로 폭 고려)
         },
       );
 
@@ -190,18 +199,33 @@ export function useRunningSession(
   }, [status]);
 
   // 러닝 시작
-  const start = useCallback(async () => {
+  const start = useCallback(async (initialLocation?: {latitude: number; longitude: number; heading?: number | null}) => {
     if (hasStartedRef.current) {
       console.warn('[RunningSession] 이미 시작됨');
       return;
     }
 
-    console.log('[RunningSession] 시작');
+    console.log('[RunningSession] 시작', initialLocation ? '(초기 위치 제공됨)' : '');
     setStatus(RunningSessionStatus.RUNNING);
     hasStartedRef.current = true;
 
     // 시작 시간 기록 (ISO 8601 format)
     startTimeRef.current = new Date().toISOString();
+
+    // ✅ FIX: 초기 위치가 제공되면 즉시 설정 (GPS 초기화 지연 방지)
+    if (initialLocation) {
+      console.log('[RunningSession] 초기 위치 설정:', initialLocation);
+      setInitialLocation({
+        latitude: initialLocation.latitude,
+        longitude: initialLocation.longitude,
+        heading: initialLocation.heading ?? null,
+        altitude: null,
+        accuracy: 0, // 초기 위치는 정확도 정보 없음
+        altitudeAccuracy: null,
+        speed: null,
+        timestamp: Date.now(),
+      });
+    }
 
     // 위치 추적 시작 (권한 요청 포함)
     console.log('[RunningSession] 위치 추적 시작 중...');
@@ -220,6 +244,7 @@ export function useRunningSession(
     course.name,
     isVoiceGuidanceEnabled,
     startTracking,
+    setInitialLocation,
   ]);
 
   // 일시정지
@@ -259,9 +284,11 @@ export function useRunningSession(
   }, [isVoiceGuidanceEnabled, resumeTracking]);
 
   // 중지
-  const stop = useCallback(async (saveRecord: boolean = true) => {
-    console.log('[RunningSession] 중지 (기록 저장:', saveRecord, ')');
-    setStatus(RunningSessionStatus.COMPLETED);
+  const stop = useCallback(async (saveRecord: boolean = true, isCompleted: boolean = false) => {
+    console.log('[RunningSession] 중지 (기록 저장:', saveRecord, ', 완주:', isCompleted, ')');
+
+    // ✅ FIX: 완주한 경우만 COMPLETED 상태로 변경, 그 외에는 IDLE로 변경
+    setStatus(isCompleted ? RunningSessionStatus.COMPLETED : RunningSessionStatus.IDLE);
 
     // 위치 추적 중지
     stopTracking();

@@ -32,7 +32,7 @@ export interface GuidanceState {
  * 경로 안내 옵션
  */
 export interface RouteGuidanceOptions {
-  offRouteThreshold?: number; // 경로 이탈 판정 거리 (미터, 기본값: 2.5m)
+  offRouteThreshold?: number; // 경로 이탈 판정 거리 (미터, 기본값: 5m)
   waypointReachedThreshold?: number; // 경유지 도착 판정 거리 (미터, 기본값: 2m)
   turnWarningDistance?: number; // 회전 안내 거리 (미터, 기본값: 20m)
   distanceAnnouncementInterval?: number; // 거리 안내 간격 (미터, 기본값: 1000m = 1km)
@@ -58,7 +58,7 @@ export class RouteGuidanceService {
     this.waypoints = waypoints;
     this.routePath = routePath;
     this.options = {
-      offRouteThreshold: options?.offRouteThreshold ?? 2.5,
+      offRouteThreshold: options?.offRouteThreshold ?? 5, // ✅ FIX: 2.5m → 5m로 증가 (경로 이탈 오판정 방지)
       waypointReachedThreshold: options?.waypointReachedThreshold ?? 2,
       turnWarningDistance: options?.turnWarningDistance ?? 20,
       distanceAnnouncementInterval: options?.distanceAnnouncementInterval ?? 1000,
@@ -80,15 +80,16 @@ export class RouteGuidanceService {
    * 위치 업데이트 처리
    *
    * 현재 위치를 기반으로 경로 안내 상태 업데이트 및 음성 안내
+   * @returns 완주 여부 (true: 모든 경유지 완료, false: 진행 중)
    */
   async updateLocation(
     location: LocationData,
     totalDistance: number,
     elapsedTime: number,
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (this.state.currentWaypointIndex >= this.waypoints.length) {
       // 모든 경유지 통과 완료
-      return;
+      return true;
     }
 
     const currentWaypoint = this.waypoints[this.state.currentWaypointIndex];
@@ -106,7 +107,12 @@ export class RouteGuidanceService {
     // 경유지 도착 체크
     if (distanceToWaypoint <= this.options.waypointReachedThreshold) {
       await this.handleWaypointReached();
-      return;
+
+      // 완주 체크: 마지막 경유지를 통과했는지 확인
+      if (this.state.currentWaypointIndex >= this.waypoints.length) {
+        return true; // ✅ 완주!
+      }
+      return false; // 다음 경유지로 진행
     }
 
     // 경로 이탈 체크
@@ -117,6 +123,8 @@ export class RouteGuidanceService {
 
     // 1km 단위 거리 안내
     await this.announceDistanceMilestone(totalDistance, elapsedTime);
+
+    return false; // 진행 중
   }
 
   /**

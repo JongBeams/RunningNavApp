@@ -90,6 +90,31 @@ export default function RunningNavigationScreen() {
     });
   }, [currentLat, currentLng, currentHeading]);
 
+  // ✅ 완주 감지 및 축하 UI
+  useEffect(() => {
+    if (status === RunningSessionStatus.COMPLETED) {
+      console.log('[RunningNav] 코스 완주 - 축하 팝업 표시');
+
+      Alert.alert(
+        '🎉 완주 축하합니다!',
+        `총 거리: ${(stats.distance / 1000).toFixed(2)}km\n` +
+          `소요 시간: ${formatTime(stats.elapsedTime)}\n` +
+          `평균 페이스: ${formatPace(stats.pace)}`,
+        [
+          {
+            text: '확인',
+            onPress: () => {
+              console.log('[RunningNav] 완주 확인 - 러닝 홈으로 이동');
+              // ✅ FIX: goBack() 대신 명시적으로 MainTabs의 Running 화면으로 이동
+              navigation.navigate('MainTabs', {screen: 'Running'});
+            },
+          },
+        ],
+        {cancelable: false},
+      );
+    }
+  }, [status, stats, navigation]);
+
   // 코스 정보 파싱
   const startCoords = getStartCoordinates();
   const endCoords = getEndCoordinates();
@@ -189,8 +214,12 @@ export default function RunningNavigationScreen() {
       return;
     }
 
-    // 5. 러닝 시작
-    await start();
+    // 5. 러닝 시작 (현재 위치 전달)
+    await start({
+      latitude: currentLat,
+      longitude: currentLng,
+      heading: previewTracking.currentLocation?.heading,
+    });
   };
 
   // 일시정지
@@ -215,14 +244,14 @@ export default function RunningNavigationScreen() {
             text: '아니오',
             style: 'destructive',
             onPress: async () => {
-              await stop(false); // 기록 저장하지 않고 종료
+              await stop(false, false); // 기록 저장하지 않고 종료 (완주 아님)
               navigation.goBack();
             },
           },
           {
             text: '예',
             onPress: async () => {
-              await stop(true); // 기록 저장하고 종료
+              await stop(true, false); // 기록 저장하고 종료 (완주 아님)
               navigation.goBack();
             },
           },
@@ -271,15 +300,16 @@ export default function RunningNavigationScreen() {
   const isPaused = status === RunningSessionStatus.PAUSED;
 
   // 표시할 위치 결정: IDLE이면 미리보기, 아니면 세션 위치
+  // ✅ FIX: RUNNING 상태에서 session 위치가 null이면 preview 위치 사용 (초기화 지연 방지)
   const displayLat = isIdle
     ? previewTracking.currentLocation?.latitude
-    : currentLat;
+    : (currentLat ?? previewTracking.currentLocation?.latitude);
   const displayLng = isIdle
     ? previewTracking.currentLocation?.longitude
-    : currentLng;
+    : (currentLng ?? previewTracking.currentLocation?.longitude);
   const displayHeading = isIdle
     ? previewTracking.currentLocation?.heading
-    : currentHeading;
+    : (currentHeading ?? previewTracking.currentLocation?.heading);
 
   return (
     <View style={commonStyles.container}>
