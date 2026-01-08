@@ -233,6 +233,12 @@ export function useLocationTracking(
         speed: location.speed,
       });
 
+      // ✅ GPS 정확도 필터링: accuracy가 20m 이상이면 무시 (저품질 데이터 제거)
+      if (location.accuracy > 20) {
+        console.warn('[LocationTracking] GPS 정확도 낮음, 무시:', location.accuracy.toFixed(1), 'm');
+        return;
+      }
+
       // 첫 위치인 경우 나침반 방향 사용
       if (!lastLocation.current && compassHeadingRef.current !== null) {
         location = {...location, heading: compassHeadingRef.current};
@@ -442,9 +448,9 @@ export function useLocationTracking(
         },
         {
           enableHighAccuracy: true,
-          distanceFilter: 5, // 표준 옵션 (iOS/Android 모두 지원)
+          distanceFilter: 3, // ✅ GPS 정확도 개선: 5m → 3m로 감소 (더 정밀한 위치 업데이트)
           timeout: 30000,
-          maximumAge: 1000,
+          maximumAge: 500, // ✅ GPS 정확도 개선: 1000ms → 500ms (오래된 데이터 방지)
           // Android 전용 옵션
           ...(Platform.OS === 'android' ? {
             interval: updateInterval,

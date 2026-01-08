@@ -53,6 +53,15 @@ export class NavigationVoice {
   }
 
   /**
+   * U-Turn (반환점) 특화 안내
+   */
+  static async announceUTurn(distance: number): Promise<void> {
+    const distanceText = this.formatDistance(distance);
+    const message = `${distanceText} 후 반환점입니다. 뒤로 돌아가세요.`;
+    await ttsService.speak(message);
+  }
+
+  /**
    * 목적지 도착 임박 안내
    */
   static async announceApproachingDestination(distance: number): Promise<void> {

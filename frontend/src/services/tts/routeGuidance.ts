@@ -199,7 +199,11 @@ export class RouteGuidanceService {
     if (angleDiff < -180) angleDiff += 360;
 
     // 회전 방향 판단
-    if (Math.abs(angleDiff) < 30) {
+    // ✅ U-Turn 감지 추가: 150도 이상 회전 시 유턴 (일자 왕복 코스 반환점 처리)
+    if (Math.abs(angleDiff) >= 150) {
+      console.log('[RouteGuidance] U-Turn 감지:', angleDiff.toFixed(1), '도');
+      return 'uturn'; // 유턴 (반환점)
+    } else if (Math.abs(angleDiff) < 30) {
       return 'straight'; // 직진 (±30도 이내)
     } else if (angleDiff > 0) {
       return 'right'; // 우회전
@@ -340,7 +344,14 @@ export class RouteGuidanceService {
       const turnDirection = this.calculateTurnDirection();
       if (turnDirection) {
         console.log('[RouteGuidance] 회전 안내:', turnDirection, distanceToWaypoint.toFixed(1), 'm');
-        await NavigationVoice.announceDirection(distanceToWaypoint, turnDirection);
+
+        // ✅ U-Turn(반환점) 특화 안내
+        if (turnDirection === 'uturn') {
+          await NavigationVoice.announceUTurn(distanceToWaypoint);
+        } else {
+          await NavigationVoice.announceDirection(distanceToWaypoint, turnDirection);
+        }
+
         this.state.hasAnnouncedTurn = true;
       }
     }
