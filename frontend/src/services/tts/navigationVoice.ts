@@ -205,13 +205,13 @@ export class NavigationVoice {
   private static getDirectionText(direction: Direction): string {
     switch (direction) {
       case 'left':
-        return '좌회전하세요';
+        return '좌회전입니다';
       case 'right':
-        return '우회전하세요';
+        return '우회전입니다';
       case 'straight':
-        return '직진하세요';
+        return '직진입니다';
       case 'uturn':
-        return '유턴하세요';
+        return '유턴입니다';
       default:
         return '계속 진행하세요';
     }

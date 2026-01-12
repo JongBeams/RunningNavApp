@@ -120,7 +120,7 @@ export function useRunningSession(
     setInitialLocation,
   } = useLocationTracking({
     updateInterval: 1000, // 1초마다 위치 갱신
-    minDistance: 5,
+    minDistance: 3, // ✅ FIX: 5m → 3m로 축소 (경유지 통과 순간 놓치지 않도록, 거리 누적 정확도 향상)
     enabled: false,
     onLocationUpdate: async location => {
       // 위치 업데이트 시 경로 안내 업데이트
@@ -159,7 +159,7 @@ export function useRunningSession(
         routePath,
         {
           enableVoiceGuidance: isVoiceGuidanceEnabled,
-          offRouteThreshold: 5, // ✅ FIX: 경로 이탈 판정 거리를 5m로 설정 (GPS 오차 및 도로 폭 고려)
+          offRouteThreshold: 12, // ✅ FIX: 경로 이탈 판정 거리를 12m로 설정 (10m 폭 골목 + GPS 오차 대응, 오판정 방지)
         },
       );
 
@@ -227,7 +227,21 @@ export function useRunningSession(
       });
     }
 
+    // ✅ FIX: 시작점(경유지 0번) 자동 통과 처리 - 위치 추적 시작 전에 먼저 실행 (경쟁 조건 방지)
+    if (routeGuidanceRef.current) {
+      const guidanceState = routeGuidanceRef.current.getState();
+      if (guidanceState.currentWaypointIndex === 0) {
+        console.log('[RunningSession] 시작점 자동 통과 처리 (경유지 0 → 1)');
+        routeGuidanceRef.current.skipToNextWaypoint();
+
+        // 상태 동기화
+        const newState = routeGuidanceRef.current.getState();
+        setCurrentWaypointIndex(newState.currentWaypointIndex);
+      }
+    }
+
     // 위치 추적 시작 (권한 요청 포함)
+    // 시작점 스킵 후 위치 추적 시작 → GPS 첫 위치가 오면 이미 currentWaypointIndex=1 상태
     console.log('[RunningSession] 위치 추적 시작 중...');
     await startTracking();
     console.log('[RunningSession] 위치 추적 시작 완료');
@@ -393,8 +407,29 @@ export function useRunningSession(
   // 진행률 계산
   const calculateProgress = useCallback((): number => {
     if (course.distance === 0) return 0;
-    return Math.min((totalDistance / course.distance) * 100, 100);
-  }, [totalDistance, course.distance]);
+
+    // ✅ FIX: 경유지 기반 완주 판정 추가 (거리 누적 오차 보정)
+    try {
+      const waypoints = geoJsonToWaypoints(course.waypointsGeoJson);
+
+      // 마지막 경유지 통과 시 무조건 100% 반환
+      // 시작점(경유지 0) 스킵 여부와 무관하게 작동: 인덱스가 배열 길이 이상이면 완주
+      if (currentWaypointIndex >= waypoints.length) {
+        console.log('[RunningSession] 모든 경유지 통과 - 진행률 100%');
+        return 100;
+      }
+
+      // 거리 기반 진행률 계산 (최대 99%까지만)
+      // minDistance(3m) 미만 이동으로 인한 거리 누적 누락을 고려하여 99% 상한선 설정
+      // 마지막 경유지 도착 전까지는 거리 기반 진행률 사용
+      const distanceProgress = (totalDistance / course.distance) * 100;
+      return Math.min(distanceProgress, 99);
+    } catch (error) {
+      console.error('[RunningSession] 진행률 계산 오류:', error);
+      // 폴백: 거리 기반만 사용
+      return Math.min((totalDistance / course.distance) * 100, 100);
+    }
+  }, [totalDistance, course.distance, currentWaypointIndex, course.waypointsGeoJson]);
 
   // 통계
   const stats: RunningSessionStats = {

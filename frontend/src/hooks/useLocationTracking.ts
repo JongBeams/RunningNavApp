@@ -233,8 +233,9 @@ export function useLocationTracking(
         speed: location.speed,
       });
 
-      // ✅ GPS 정확도 필터링: accuracy가 20m 이상이면 무시 (저품질 데이터 제거)
-      if (location.accuracy > 20) {
+      // ✅ GPS 정확도 필터링: accuracy가 12m 이상이면 무시 (저품질 데이터 제거)
+      // 20m → 12m로 강화하여 경로 이탈 오판정 방지
+      if (location.accuracy > 12) {
         console.warn('[LocationTracking] GPS 정확도 낮음, 무시:', location.accuracy.toFixed(1), 'm');
         return;
       }

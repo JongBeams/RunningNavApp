@@ -205,11 +205,11 @@ export default function RunningNavigationScreen() {
 
     console.log('[RunningNav] 출발지까지 거리:', distanceToStart.toFixed(1), 'm');
 
-    // 4. 50m 이상이면 차단
-    if (distanceToStart > 50) {
+    // 4. 5m 이상이면 차단
+    if (distanceToStart > 5) {
       Alert.alert(
         '출발 불가',
-        `출발 지점에 위치하고 있지 않습니다.\n\n현재 거리: ${distanceToStart.toFixed(0)}m\n출발지로 이동해주세요.`,
+        `출발 지점에 위치하고 있지 않습니다.\n\n현재 거리: ${distanceToStart.toFixed(1)}m\n출발지로 이동해주세요.`,
       );
       return;
     }

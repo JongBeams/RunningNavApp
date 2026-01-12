@@ -32,9 +32,9 @@ export interface GuidanceState {
  * 경로 안내 옵션
  */
 export interface RouteGuidanceOptions {
-  offRouteThreshold?: number; // 경로 이탈 판정 거리 (미터, 기본값: 5m)
-  waypointReachedThreshold?: number; // 경유지 도착 판정 거리 (미터, 기본값: 2m)
-  turnWarningDistance?: number; // 회전 안내 거리 (미터, 기본값: 20m)
+  offRouteThreshold?: number; // 경로 이탈 판정 거리 (미터, 기본값: 12m)
+  waypointReachedThreshold?: number; // 경유지 도착 판정 거리 (미터, 기본값: 8m)
+  turnWarningDistance?: number; // 회전 안내 거리 (미터, 기본값: 30m)
   distanceAnnouncementInterval?: number; // 거리 안내 간격 (미터, 기본값: 1000m = 1km)
   enableVoiceGuidance?: boolean; // 음성 안내 활성화 (기본값: true)
 }
@@ -58,9 +58,9 @@ export class RouteGuidanceService {
     this.waypoints = waypoints;
     this.routePath = routePath;
     this.options = {
-      offRouteThreshold: options?.offRouteThreshold ?? 5, // ✅ FIX: 2.5m → 5m로 증가 (경로 이탈 오판정 방지)
-      waypointReachedThreshold: options?.waypointReachedThreshold ?? 2,
-      turnWarningDistance: options?.turnWarningDistance ?? 20,
+      offRouteThreshold: options?.offRouteThreshold ?? 12, // ✅ FIX: 8m → 12m로 증가 (10m 폭 골목 + GPS 오차 대응, 경로 이탈 오판정 방지)
+      waypointReachedThreshold: options?.waypointReachedThreshold ?? 8, // ✅ FIX: 2m → 8m로 증가 (GPS 정확도 5-10m 고려, 경유지 통과 누락 방지)
+      turnWarningDistance: options?.turnWarningDistance ?? 30, // ✅ FIX: 20m → 30m로 확장 (짧은 구간에서도 안내 기회 증가)
       distanceAnnouncementInterval: options?.distanceAnnouncementInterval ?? 1000,
       enableVoiceGuidance: options?.enableVoiceGuidance ?? true,
     };
@@ -104,8 +104,31 @@ export class RouteGuidanceService {
 
     this.state.distanceToNextWaypoint = distanceToWaypoint;
 
-    // 경유지 도착 체크
-    if (distanceToWaypoint <= this.options.waypointReachedThreshold) {
+    // ✅ FIX: 경유지 도착 체크 - 동적 임계값 적용
+    // 기본 8m, 하지만 다음 경유지가 가까우면(15m 이내) 임계값을 줄임
+    let dynamicThreshold = this.options.waypointReachedThreshold;
+
+    if (this.state.currentWaypointIndex < this.waypoints.length - 1) {
+      const nextWaypoint = this.waypoints[this.state.currentWaypointIndex + 1];
+      const distanceToNext = calculateDistance(
+        currentWaypoint.latitude,
+        currentWaypoint.longitude,
+        nextWaypoint.latitude,
+        nextWaypoint.longitude,
+      );
+
+      // 경유지 간 거리가 15m 미만이면 임계값을 30%로 축소 (최소 3m)
+      if (distanceToNext < 15) {
+        dynamicThreshold = Math.max(3, distanceToNext * 0.3);
+        console.log(
+          '[RouteGuidance] 짧은 구간 감지 -',
+          `경유지 간 거리: ${distanceToNext.toFixed(1)}m,`,
+          `도착 판정: ${dynamicThreshold.toFixed(1)}m`
+        );
+      }
+    }
+
+    if (distanceToWaypoint <= dynamicThreshold) {
       await this.handleWaypointReached();
 
       // 완주 체크: 마지막 경유지를 통과했는지 확인
@@ -170,12 +193,16 @@ export class RouteGuidanceService {
     const currentWaypoint = this.waypoints[this.state.currentWaypointIndex];
     const nextWaypoint = this.waypoints[this.state.currentWaypointIndex + 1];
 
-    // 다음 다음 경유지가 없으면 직진으로 간주
-    if (this.state.currentWaypointIndex >= this.waypoints.length - 2) {
-      return 'straight';
-    }
+    // ✅ FIX: 다음다음 경유지가 없어도 방향 계산 (마지막 경유지로 가는 회전도 안내)
+    // 다음다음 경유지가 없으면 현재 위치를 기준으로 계산
+    const waypointAfterNext = this.state.currentWaypointIndex >= this.waypoints.length - 2
+      ? null
+      : this.waypoints[this.state.currentWaypointIndex + 2];
 
-    const waypointAfterNext = this.waypoints[this.state.currentWaypointIndex + 2];
+    // 다음다음 경유지가 없으면 현재→다음 방향만 계산 (직진으로 간주하지 않음)
+    if (!waypointAfterNext) {
+      return null; // 마지막 경유지는 방향 안내 없이 거리만 안내
+    }
 
     // 현재 경유지 → 다음 경유지 방향
     const bearing1 = calculateBearing(
@@ -399,6 +426,18 @@ export class RouteGuidanceService {
    */
   getState(): GuidanceState {
     return {...this.state};
+  }
+
+  /**
+   * 현재 경유지를 건너뛰고 다음 경유지로 이동 (시작점 자동 통과용)
+   */
+  skipToNextWaypoint(): void {
+    if (this.state.currentWaypointIndex < this.waypoints.length) {
+      console.log('[RouteGuidance] 경유지', this.state.currentWaypointIndex, '건너뜀 (시작점 자동 통과)');
+      this.state.currentWaypointIndex++;
+      this.state.hasAnnounced100m = false;
+      this.state.hasAnnouncedTurn = false;
+    }
   }
 
   /**
