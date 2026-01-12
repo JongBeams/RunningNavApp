@@ -2,7 +2,7 @@ import React from 'react';
 import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
 
 // 앱 버전 정보
-const APP_VERSION = '0.8.1';
+const APP_VERSION = '0.8.2';
 
 export default function LoadingScreen() {
   return (

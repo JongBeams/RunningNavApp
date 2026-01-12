@@ -24,7 +24,8 @@ export interface GuidanceState {
   isOffRoute: boolean; // 경로 이탈 여부
   lastOffRouteWarningTime: number; // 마지막 경로 이탈 경고 시간 (타임스탬프)
   hasAnnounced100m: boolean; // 100m 안내 완료 여부
-  hasAnnouncedTurn: boolean; // 회전 안내 완료 여부 (20m)
+  hasAnnouncedTurn: boolean; // 회전 안내 완료 여부 (원거리, 20-30m)
+  hasAnnouncedNearTurn: boolean; // 회전 근접 안내 완료 여부 (근거리, 5-7m)
   lastAnnouncedDistance: number; // 마지막 1km 안내 거리
 }
 
@@ -72,6 +73,7 @@ export class RouteGuidanceService {
       lastOffRouteWarningTime: 0,
       hasAnnounced100m: false,
       hasAnnouncedTurn: false,
+      hasAnnouncedNearTurn: false,
       lastAnnouncedDistance: 0,
     };
   }
@@ -141,8 +143,8 @@ export class RouteGuidanceService {
     // 경로 이탈 체크
     await this.checkOffRoute(location);
 
-    // 거리별 음성 안내
-    await this.announceDistanceGuidance(distanceToWaypoint);
+    // 거리별 음성 안내 (동적 임계값 전달)
+    await this.announceDistanceGuidance(distanceToWaypoint, dynamicThreshold);
 
     // 1km 단위 거리 안내
     await this.announceDistanceMilestone(totalDistance, elapsedTime);
@@ -178,6 +180,7 @@ export class RouteGuidanceService {
     this.state.currentWaypointIndex++;
     this.state.hasAnnounced100m = false;
     this.state.hasAnnouncedTurn = false;
+    this.state.hasAnnouncedNearTurn = false;
   }
 
   /**
@@ -352,27 +355,30 @@ export class RouteGuidanceService {
   }
 
   /**
-   * 거리별 음성 안내 (회전 안내 20m, 목적지 임박 100m)
+   * 거리별 음성 안내 (2단계 회전 안내: 원거리 20-30m, 근거리 5-7m + 목적지 임박 100m)
    */
   private async announceDistanceGuidance(
     distanceToWaypoint: number,
+    dynamicThreshold: number, // 동적 경유지 도착 판정 임계값
   ): Promise<void> {
     if (!this.options.enableVoiceGuidance) {
       return;
     }
 
-    // 회전 안내 (20m 전방)
-    if (
-      distanceToWaypoint <= this.options.turnWarningDistance &&
-      distanceToWaypoint > this.options.waypointReachedThreshold &&
-      !this.state.hasAnnouncedTurn &&
-      this.state.currentWaypointIndex < this.waypoints.length - 1 // 마지막 경유지 제외
-    ) {
-      const turnDirection = this.calculateTurnDirection();
-      if (turnDirection) {
-        console.log('[RouteGuidance] 회전 안내:', turnDirection, distanceToWaypoint.toFixed(1), 'm');
+    // ✅ 2단계 회전 안내 시스템
+    const turnDirection = this.calculateTurnDirection();
+    const isLastWaypoint = this.state.currentWaypointIndex >= this.waypoints.length - 1;
 
-        // ✅ U-Turn(반환점) 특화 안내
+    if (turnDirection && !isLastWaypoint) {
+      // 1단계: 원거리 회전 안내 (20-30m)
+      if (
+        distanceToWaypoint <= this.options.turnWarningDistance && // 30m 이내
+        distanceToWaypoint > 10 && // 10m 초과
+        !this.state.hasAnnouncedTurn
+      ) {
+        console.log('[RouteGuidance] 1단계 회전 안내 (원거리):', turnDirection, distanceToWaypoint.toFixed(1), 'm');
+
+        // U-Turn(반환점) 특화 안내
         if (turnDirection === 'uturn') {
           await NavigationVoice.announceUTurn(distanceToWaypoint);
         } else {
@@ -380,6 +386,37 @@ export class RouteGuidanceService {
         }
 
         this.state.hasAnnouncedTurn = true;
+      }
+
+      // 2단계: 근거리 회전 안내 (5-10m) - "곧 회전"
+      // ✅ FIX: 동적 임계값 사용 (경유지 도착 판정과 일관성 유지)
+      const nearTurnDistance = 10; // 근거리 안내 기준 거리 (7m → 10m로 확대하여 일반 구간에서도 충분한 안내 범위 확보)
+
+      if (
+        distanceToWaypoint <= nearTurnDistance && // 10m 이내
+        distanceToWaypoint > dynamicThreshold && // 동적 경유지 도착 판정 임계값 초과
+        !this.state.hasAnnouncedNearTurn
+        // ✅ FIX: 1단계 안내 조건 제거 - 짧은 구간에서 1단계 누락 시에도 2단계 안내 가능하도록
+        // 사용자가 빠르게 이동하여 10-30m 구간을 건너뛰는 경우에도 근거리 안내는 제공
+      ) {
+        console.log(
+          '[RouteGuidance] 2단계 회전 안내 (근거리):',
+          turnDirection,
+          distanceToWaypoint.toFixed(1),
+          'm',
+          '(임계값:',
+          dynamicThreshold.toFixed(1),
+          'm)'
+        );
+
+        // "곧 회전" 안내 (formatDistance가 10m 미만일 때 "곧" 반환)
+        if (turnDirection === 'uturn') {
+          await NavigationVoice.announceUTurn(distanceToWaypoint);
+        } else {
+          await NavigationVoice.announceDirection(distanceToWaypoint, turnDirection);
+        }
+
+        this.state.hasAnnouncedNearTurn = true;
       }
     }
 
@@ -437,6 +474,7 @@ export class RouteGuidanceService {
       this.state.currentWaypointIndex++;
       this.state.hasAnnounced100m = false;
       this.state.hasAnnouncedTurn = false;
+      this.state.hasAnnouncedNearTurn = false;
     }
   }
 
@@ -451,6 +489,7 @@ export class RouteGuidanceService {
       lastOffRouteWarningTime: 0,
       hasAnnounced100m: false,
       hasAnnouncedTurn: false,
+      hasAnnouncedNearTurn: false,
       lastAnnouncedDistance: 0,
     };
   }

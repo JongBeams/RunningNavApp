@@ -187,12 +187,12 @@ export class NavigationVoice {
    * 거리를 자연스러운 한국어로 변환
    */
   private static formatDistance(meters: number): string {
-    if (meters < 50) {
-      return '곧';
+    if (meters < 10) {
+      return '곧'; // 10m 미만: "곧"
     } else if (meters < 100) {
-      return `약 ${Math.round(meters / 10) * 10}미터`;
+      return `${Math.round(meters)}미터`; // 10-100m: 정확한 거리
     } else if (meters < 1000) {
-      return `${Math.round(meters / 50) * 50}미터`;
+      return `${Math.round(meters / 10) * 10}미터`; // 100-1000m: 10m 단위 반올림
     } else {
       const km = (meters / 1000).toFixed(1);
       return `${km}킬로미터`;
