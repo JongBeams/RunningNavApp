@@ -12,7 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import {useAuth} from '../../context/AuthContext';
-import {colors} from '../../styles';
+import {colors, commonStyles, spacing, fontSize, borderRadius} from '../../styles';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {AuthStackParamList} from '../../types/navigation';
 
@@ -162,9 +162,9 @@ const SignupScreen: React.FC<Props> = ({navigation}) => {
         <View style={styles.form}>
           {/* 이메일 입력 */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>이메일</Text>
+            <Text style={commonStyles.label}>이메일</Text>
             <TextInput
-              style={[styles.input, errors.email ? styles.inputError : null]}
+              style={[commonStyles.input, errors.email ? commonStyles.inputError : null]}
               placeholder="example@email.com"
               placeholderTextColor={colors.gray}
               value={email}
@@ -178,17 +178,17 @@ const SignupScreen: React.FC<Props> = ({navigation}) => {
               editable={!isLoading}
             />
             {errors.email ? (
-              <Text style={styles.errorText}>{errors.email}</Text>
+              <Text style={commonStyles.errorText}>{errors.email}</Text>
             ) : null}
           </View>
 
           {/* 비밀번호 입력 */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>비밀번호</Text>
+            <Text style={commonStyles.label}>비밀번호</Text>
             <TextInput
               style={[
-                styles.input,
-                errors.password ? styles.inputError : null,
+                commonStyles.input,
+                errors.password ? commonStyles.inputError : null,
               ]}
               placeholder="8자 이상 입력"
               placeholderTextColor={colors.gray}
@@ -202,17 +202,17 @@ const SignupScreen: React.FC<Props> = ({navigation}) => {
               editable={!isLoading}
             />
             {errors.password ? (
-              <Text style={styles.errorText}>{errors.password}</Text>
+              <Text style={commonStyles.errorText}>{errors.password}</Text>
             ) : null}
           </View>
 
           {/* 비밀번호 확인 입력 */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>비밀번호 확인</Text>
+            <Text style={commonStyles.label}>비밀번호 확인</Text>
             <TextInput
               style={[
-                styles.input,
-                errors.passwordConfirm ? styles.inputError : null,
+                commonStyles.input,
+                errors.passwordConfirm ? commonStyles.inputError : null,
               ]}
               placeholder="비밀번호 재입력"
               placeholderTextColor={colors.gray}
@@ -226,17 +226,17 @@ const SignupScreen: React.FC<Props> = ({navigation}) => {
               editable={!isLoading}
             />
             {errors.passwordConfirm ? (
-              <Text style={styles.errorText}>{errors.passwordConfirm}</Text>
+              <Text style={commonStyles.errorText}>{errors.passwordConfirm}</Text>
             ) : null}
           </View>
 
           {/* 이름 입력 */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>이름</Text>
+            <Text style={commonStyles.label}>이름</Text>
             <TextInput
               style={[
-                styles.input,
-                errors.fullName ? styles.inputError : null,
+                commonStyles.input,
+                errors.fullName ? commonStyles.inputError : null,
               ]}
               placeholder="홍길동"
               placeholderTextColor={colors.gray}
@@ -249,15 +249,15 @@ const SignupScreen: React.FC<Props> = ({navigation}) => {
               editable={!isLoading}
             />
             {errors.fullName ? (
-              <Text style={styles.errorText}>{errors.fullName}</Text>
+              <Text style={commonStyles.errorText}>{errors.fullName}</Text>
             ) : null}
           </View>
 
           {/* 전화번호 입력 */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>전화번호</Text>
+            <Text style={commonStyles.label}>전화번호</Text>
             <TextInput
-              style={[styles.input, errors.phone ? styles.inputError : null]}
+              style={[commonStyles.input, errors.phone ? commonStyles.inputError : null]}
               placeholder="010-1234-5678"
               placeholderTextColor={colors.gray}
               value={phone}
@@ -270,7 +270,7 @@ const SignupScreen: React.FC<Props> = ({navigation}) => {
               editable={!isLoading}
             />
             {errors.phone ? (
-              <Text style={styles.errorText}>{errors.phone}</Text>
+              <Text style={commonStyles.errorText}>{errors.phone}</Text>
             ) : null}
           </View>
 
@@ -306,79 +306,57 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    padding: 24,
+    padding: spacing.xl,
   },
   header: {
     alignItems: 'center',
-    marginTop: 40,
-    marginBottom: 32,
+    marginTop: spacing.xxxl,
+    marginBottom: spacing.xxl,
   },
   title: {
-    fontSize: 28,
+    fontSize: fontSize.xxxl,
     fontWeight: 'bold',
     color: colors.primary,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: fontSize.sm,
     color: colors.gray,
   },
   form: {
     width: '100%',
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: spacing.base,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.darkGray,
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: colors.black,
-    backgroundColor: colors.white,
-  },
-  inputError: {
-    borderColor: colors.error,
-  },
-  errorText: {
-    fontSize: 12,
-    color: colors.error,
-    marginTop: 4,
-  },
+  // label, input, inputError, errorText → commonStyles 사용
   button: {
     backgroundColor: colors.primary,
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: borderRadius.base,
+    padding: spacing.base,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: spacing.sm,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: fontSize.base,
     fontWeight: 'bold',
     color: colors.white,
   },
   loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 24,
-    marginBottom: 24,
+    marginTop: spacing.xl,
+    marginBottom: spacing.xl,
   },
   loginText: {
-    fontSize: 14,
+    fontSize: fontSize.sm,
     color: colors.gray,
   },
   loginLink: {
-    fontSize: 14,
+    fontSize: fontSize.sm,
     fontWeight: 'bold',
     color: colors.primary,
   },

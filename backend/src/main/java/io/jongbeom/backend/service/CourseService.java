@@ -16,6 +16,7 @@ import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,8 +26,36 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CourseService {
 
+    private static final String SHARE_CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final int SHARE_CODE_LENGTH = 8;
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final CourseRepository courseRepository;
     private final ProfileRepository profileRepository;
+
+    /**
+     * 고유한 8자리 shareCode 생성 (영문 대문자 + 숫자)
+     */
+    private String generateUniqueShareCode() {
+        String shareCode;
+        int maxAttempts = 10;
+        int attempts = 0;
+
+        do {
+            StringBuilder sb = new StringBuilder(SHARE_CODE_LENGTH);
+            for (int i = 0; i < SHARE_CODE_LENGTH; i++) {
+                sb.append(SHARE_CODE_CHARS.charAt(SECURE_RANDOM.nextInt(SHARE_CODE_CHARS.length())));
+            }
+            shareCode = sb.toString();
+            attempts++;
+
+            if (attempts >= maxAttempts) {
+                throw new IllegalStateException("고유한 공유 코드를 생성할 수 없습니다.");
+            }
+        } while (courseRepository.existsByShareCode(shareCode));
+
+        return shareCode;
+    }
 
     /**
      * 코스 생성
@@ -49,6 +78,9 @@ public class CourseService {
             route.setSRID(4326);
             waypoints.setSRID(4326);
 
+            // 고유한 shareCode 생성
+            String shareCode = generateUniqueShareCode();
+
             Course course = Course.builder()
                     .name(request.getName())
                     .route(route)
@@ -57,6 +89,7 @@ public class CourseService {
                     .duration(request.getDuration())
                     .profile(profile)
                     .isActive(true)
+                    .shareCode(shareCode)
                     .build();
 
             Course savedCourse = courseRepository.save(course);
@@ -130,5 +163,18 @@ public class CourseService {
         courseRepository.save(course);
 
         log.info("[코스 삭제] 완료: courseId={}", courseId);
+    }
+
+    /**
+     * shareCode로 코스 조회 (공개 조회 - 인증 불필요)
+     */
+    @Transactional(readOnly = true)
+    public CourseResponse getCourseByShareCode(String shareCode) {
+        log.info("[코스 조회 by shareCode] shareCode={}", shareCode);
+
+        Course course = courseRepository.findByShareCodeAndIsActiveTrue(shareCode)
+                .orElseThrow(() -> new ResourceNotFoundException("해당 공유 코드의 코스를 찾을 수 없습니다."));
+
+        return CourseResponse.from(course);
     }
 }

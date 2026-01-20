@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 공개 API (인증 불필요)
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/courses/share/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/error").permitAll()
 

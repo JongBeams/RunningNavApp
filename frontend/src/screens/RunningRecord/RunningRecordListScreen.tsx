@@ -17,6 +17,7 @@ import {
   fontSize,
   borderRadius,
   commonStyles,
+  shadows,
 } from '../../styles';
 import {
   getMyRunningRecords,
@@ -138,7 +139,7 @@ export default function RunningRecordListScreen() {
     <View style={commonStyles.container}>
       {records.length === 0 && !isLoading ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>아직 러닝 기록이 없습니다</Text>
+          <Text style={commonStyles.emptyText}>아직 러닝 기록이 없습니다</Text>
           <Text style={styles.emptySubText}>첫 러닝을 시작해보세요!</Text>
         </View>
       ) : (
@@ -160,16 +161,13 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: spacing.md,
   },
+  // 카드 스타일 - shadows.base 사용
   recordItem: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.md,
     padding: spacing.base,
     marginBottom: spacing.md,
-    shadowColor: colors.black,
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    ...shadows.base,
   },
   recordHeader: {
     flexDirection: 'row',
@@ -213,13 +211,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
   },
-  emptyText: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-    textAlign: 'center',
-  },
+  // emptyText → commonStyles.emptyText 사용
   emptySubText: {
     fontSize: fontSize.base,
     color: colors.textSecondary,

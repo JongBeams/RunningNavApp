@@ -185,6 +185,315 @@ export const commonStyles = StyleSheet.create({
   p_base: {padding: spacing.base}, // 내부 여백 16px
   p_lg: {padding: spacing.lg}, // 내부 여백 20px
   p_xl: {padding: spacing.xl}, // 내부 여백 24px
+
+  // ========== 입력 필드 상태 스타일 (Input State Styles) ==========
+
+  // 입력 필드 에러 상태
+  inputError: {
+    borderColor: colors.error,
+  },
+
+  // 라벨 텍스트
+  label: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: colors.darkGray,
+    marginBottom: spacing.xs,
+  },
+
+  // 에러 메시지 텍스트
+  errorText: {
+    fontSize: fontSize.xs,
+    color: colors.error,
+    marginTop: spacing.xs,
+  },
+
+  // ========== 버튼 변형 스타일 (Button Variants) ==========
+
+  // 작은 버튼 - 아이콘과 함께 사용
+  buttonSmall: {
+    flexDirection: 'row',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.base,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // 작은 버튼 텍스트
+  buttonSmallText: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    marginLeft: spacing.xs,
+  },
+
+  // 위험 버튼 (삭제 등)
+  buttonDanger: {
+    backgroundColor: colors.error,
+    borderRadius: borderRadius.md,
+    padding: spacing.base,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // 위험 버튼 텍스트
+  buttonDangerText: {
+    color: colors.white,
+    fontSize: fontSize.base,
+    fontWeight: '700',
+  },
+
+  // ========== 헤더 스타일 (Header Styles) ==========
+
+  // 화면 헤더 - 상단 네비게이션 영역
+  screenHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+
+  // 헤더 제목
+  screenHeaderTitle: {
+    fontSize: fontSize.lg,
+    fontWeight: '600',
+    color: colors.text,
+  },
+
+  // 섹션 헤더 - 콘텐츠 내 섹션 제목
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+
+  // ========== 모달 스타일 (Modal Styles) ==========
+
+  // 모달 오버레이 - 반투명 배경
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+
+  // 모달 시트 - 하단에서 올라오는 모달
+  modalSheet: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: borderRadius.xl,
+    borderTopRightRadius: borderRadius.xl,
+    paddingBottom: spacing.lg,
+  },
+
+  // 모달 헤더
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+
+  // 모달 제목
+  modalTitle: {
+    fontSize: fontSize.xl,
+    fontWeight: '700',
+    color: colors.text,
+  },
+
+  // 모달 닫기 버튼 텍스트
+  modalCloseText: {
+    fontSize: fontSize.base,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+
+  // ========== 중앙 모달 스타일 (Center Modal Styles) ==========
+
+  // 중앙 모달 오버레이 - 중앙 정렬된 반투명 배경
+  modalCenterOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+
+  // 중앙 모달 컨텐츠 - 팝업 형태의 모달
+  modalCenterContent: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.lg,
+    padding: spacing.lg,
+    width: '100%',
+    maxWidth: 340,
+  },
+
+  // 중앙 모달 제목
+  modalCenterTitle: {
+    fontSize: fontSize.xl,
+    fontWeight: '700',
+    color: colors.text,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+
+  // 중앙 모달 설명
+  modalCenterDescription: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.md,
+  },
+
+  // 모달 입력 필드 - 코드 입력 등에 사용
+  modalInput: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.base,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: fontSize.lg,
+    color: colors.text,
+    textAlign: 'center',
+    letterSpacing: 2,
+    marginBottom: spacing.lg,
+  },
+
+  // 모달 버튼 컨테이너
+  modalButtons: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+
+  // 모달 취소 버튼
+  modalCancelButton: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.base,
+    backgroundColor: colors.backgroundDark,
+    alignItems: 'center',
+  },
+
+  // 모달 취소 버튼 텍스트
+  modalCancelButtonText: {
+    fontSize: fontSize.base,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
+
+  // 모달 확인 버튼
+  modalConfirmButton: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.base,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+  },
+
+  // 모달 확인 버튼 텍스트
+  modalConfirmButtonText: {
+    fontSize: fontSize.base,
+    fontWeight: '600',
+    color: colors.white,
+  },
+
+  // 버튼 비활성화 상태
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+
+  // ========== 로딩/빈 상태 스타일 (Loading/Empty State Styles) ==========
+
+  // 로딩 컨테이너
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: spacing.xxxl,
+  },
+
+  // 로딩 텍스트
+  loadingText: {
+    marginTop: spacing.lg,
+    fontSize: fontSize.base,
+    color: colors.textSecondary,
+  },
+
+  // 빈 상태 컨테이너
+  emptyContainer: {
+    paddingVertical: spacing.xxxl,
+    alignItems: 'center',
+  },
+
+  // 빈 상태 텍스트
+  emptyText: {
+    fontSize: fontSize.lg,
+    fontWeight: '600',
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+  },
+
+  // ========== 리스트 아이템 스타일 (List Item Styles) ==========
+
+  // 리스트 아이템
+  listItem: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  // 리스트 아이템 강조
+  listItemHighlight: {
+    backgroundColor: colors.primaryLight + '10',
+  },
+
+  // ========== 카드 변형 스타일 (Card Variants) ==========
+
+  // 작은 카드
+  cardSmall: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.base,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
+    ...shadows.sm,
+  },
+
+  // 강조 카드 (선택됨 등)
+  cardHighlight: {
+    backgroundColor: colors.primaryLight + '10',
+  },
+
+  // ========== 텍스트 변형 스타일 (Text Variants) ==========
+
+  // 캡션 텍스트 - 아주 작은 설명
+  caption: {
+    fontSize: fontSize.xs,
+    color: colors.textLight,
+  },
+
+  // 큰 제목 - 특별한 강조
+  largeTitle: {
+    fontSize: fontSize.display,
+    fontWeight: '700',
+    color: colors.text,
+  },
+
+  // 링크 텍스트
+  linkText: {
+    fontSize: fontSize.sm,
+    color: colors.primary,
+    fontWeight: '600',
+  },
 });
 
 /* 
@@ -203,3 +512,5 @@ export const RUNNIGN_START_ICON_PATH = "m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 
 export const ADD_COURSE_ICON_PATH="M12 4.5v15m7.5-7.5h-15";
 //경로 리스트 아이콘
 export const LIST_COURSE_ICON_PATH="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z";
+//코스 탐색 아이콘 (돋보기)
+export const SEARCH_COURSE_ICON_PATH="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z";

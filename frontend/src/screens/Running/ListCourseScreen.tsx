@@ -1,11 +1,12 @@
 import React, {useState} from 'react';
-import {View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert} from 'react-native';
+import {View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Modal, TextInput} from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import {useNavigation, useFocusEffect} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../../types/navigation';
-import {colors, spacing, fontSize, commonStyles, ADD_COURSE_ICON_PATH} from '../../styles';
+import {colors, spacing, fontSize, commonStyles, shadows, borderRadius, ADD_COURSE_ICON_PATH} from '../../styles';
 import {SVGIcon} from '../../components/common';
-import {getMyCourses, deleteCourse, geoJsonToWaypoints, type CourseResponse} from '../../services/api/courseApi';
+import {getMyCourses, deleteCourse, geoJsonToWaypoints, createCourse, getCourseByShareCode, type CourseResponse} from '../../services/api/courseApi';
 
 type ListCourseScreenNav = NativeStackNavigationProp<RootStackParamList, 'ListCourse'>;
 
@@ -13,6 +14,9 @@ export default function ListCourseScreen() {
   const navigation = useNavigation<ListCourseScreenNav>();
   const [courses, setCourses] = useState<CourseResponse[]>([]);
   const [loading, setLoading] = useState(false);
+  const [importModalVisible, setImportModalVisible] = useState(false);
+  const [shareCodeInput, setShareCodeInput] = useState('');
+  const [importing, setImporting] = useState(false);
 
   const loadCourses = async () => {
     try {
@@ -45,6 +49,67 @@ export default function ListCourseScreen() {
 
   const handleAddCourse = () => {
     navigation.navigate('CreateCourse');
+  };
+
+  const handleOpenImportModal = () => {
+    setShareCodeInput('');
+    setImportModalVisible(true);
+  };
+
+  const handleCloseImportModal = () => {
+    setImportModalVisible(false);
+    setShareCodeInput('');
+  };
+
+  const handleImportCourse = async () => {
+    const code = shareCodeInput.trim().toUpperCase();
+    if (!code) {
+      Alert.alert('알림', '공유 코드를 입력해주세요.');
+      return;
+    }
+
+    if (code.length !== 8) {
+      Alert.alert('알림', '공유 코드는 8자리입니다.');
+      return;
+    }
+
+    try {
+      setImporting(true);
+
+      // shareCode로 코스 조회
+      const sourceCourse = await getCourseByShareCode(code);
+
+      // 새 코스로 복사하여 저장
+      await createCourse({
+        name: `${sourceCourse.name} (복사본)`,
+        routeGeoJson: sourceCourse.routeGeoJson,
+        waypointsGeoJson: sourceCourse.waypointsGeoJson,
+        distance: sourceCourse.distance,
+        duration: sourceCourse.duration,
+      });
+
+      handleCloseImportModal();
+      Alert.alert('성공', `"${sourceCourse.name}" 코스를 불러왔습니다.`);
+      loadCourses();
+    } catch (error: any) {
+      console.error('[ListCourse] 코스 불러오기 실패:', error);
+      if (error.response?.status === 404) {
+        Alert.alert('오류', '해당 공유 코드의 코스를 찾을 수 없습니다.');
+      } else {
+        Alert.alert('오류', '코스를 불러오는데 실패했습니다.');
+      }
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleCopyShareCode = (shareCode: string | undefined, courseName: string) => {
+    if (!shareCode) {
+      Alert.alert('알림', '이 코스에는 공유 코드가 없습니다.');
+      return;
+    }
+    Clipboard.setString(shareCode);
+    Alert.alert('복사 완료', `"${courseName}" 코스의 공유 코드가 클립보드에 복사되었습니다.\n\n코드: ${shareCode}`);
   };
 
   const handleDeleteCourse = (courseId: string, courseName: string) => {
@@ -87,19 +152,24 @@ export default function ListCourseScreen() {
             <Text style={commonStyles.title}>코스 목록</Text>
             <Text style={commonStyles.subtitle}>저장된 러닝 경로를 확인하세요</Text>
           </View>
-          <TouchableOpacity style={styles.addButton} onPress={handleAddCourse}>
-            <SVGIcon iconPath={ADD_COURSE_ICON_PATH} color={colors.white} size={20} />
-            <Text style={styles.addButtonText}>코스 추가</Text>
-          </TouchableOpacity>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity style={styles.importButton} onPress={handleOpenImportModal}>
+              <Text style={styles.importButtonText}>코스 불러오기</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.addButton} onPress={handleAddCourse}>
+              <SVGIcon iconPath={ADD_COURSE_ICON_PATH} color={colors.white} size={20} />
+              <Text style={styles.addButtonText}>코스 추가</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {loading ? (
-          <View style={styles.loadingContainer}>
+          <View style={commonStyles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
         ) : courses.length === 0 ? (
           <View style={commonStyles.card}>
-            <Text style={styles.emptyText}>아직 저장된 코스가 없습니다</Text>
+            <Text style={commonStyles.emptyText}>아직 저장된 코스가 없습니다</Text>
             <Text style={commonStyles.body}>
               코스 추가 버튼을 눌러 새로운 러닝 코스를 만들어보세요!
             </Text>
@@ -110,11 +180,18 @@ export default function ListCourseScreen() {
               <View key={course.id} style={styles.courseCard}>
                 <View style={styles.courseHeader}>
                   <Text style={styles.courseName}>{course.name}</Text>
-                  <TouchableOpacity
-                    onPress={() => handleDeleteCourse(course.id, course.name)}
-                    style={styles.deleteButton}>
-                    <Text style={styles.deleteButtonText}>삭제</Text>
-                  </TouchableOpacity>
+                  <View style={styles.courseActions}>
+                    <TouchableOpacity
+                      onPress={() => handleCopyShareCode(course.shareCode, course.name)}
+                      style={styles.copyButton}>
+                      <Text style={styles.copyButtonText}>복사</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => handleDeleteCourse(course.id, course.name)}
+                      style={styles.deleteButton}>
+                      <Text style={styles.deleteButtonText}>삭제</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
                 <View style={styles.courseInfo}>
                   <View style={styles.infoItem}>
@@ -144,6 +221,48 @@ export default function ListCourseScreen() {
           </>
         )}
       </ScrollView>
+
+      {/* 코스 불러오기 모달 */}
+      <Modal
+        visible={importModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCloseImportModal}>
+        <View style={commonStyles.modalCenterOverlay}>
+          <View style={commonStyles.modalCenterContent}>
+            <Text style={commonStyles.modalCenterTitle}>코스 불러오기</Text>
+            <Text style={commonStyles.modalCenterDescription}>
+              공유 받은 8자리 코드를 입력하세요
+            </Text>
+            <TextInput
+              style={commonStyles.modalInput}
+              placeholder="예: ABC12345"
+              placeholderTextColor={colors.textLight}
+              value={shareCodeInput}
+              onChangeText={setShareCodeInput}
+              autoCapitalize="characters"
+              maxLength={8}
+            />
+            <View style={commonStyles.modalButtons}>
+              <TouchableOpacity
+                style={commonStyles.modalCancelButton}
+                onPress={handleCloseImportModal}>
+                <Text style={commonStyles.modalCancelButtonText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[commonStyles.modalConfirmButton, importing && commonStyles.buttonDisabled]}
+                onPress={handleImportCourse}
+                disabled={importing}>
+                {importing ? (
+                  <ActivityIndicator size="small" color={colors.white} />
+                ) : (
+                  <Text style={commonStyles.modalConfirmButtonText}>불러오기</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -159,43 +278,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
+  // 버튼 스타일 - commonStyles.buttonSmall 기반
   addButton: {
-    flexDirection: 'row',
+    ...commonStyles.buttonSmall,
     backgroundColor: colors.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderRadius: borderRadius.base,
   },
   addButtonText: {
+    ...commonStyles.buttonSmallText,
     color: colors.white,
-    fontSize: fontSize.sm,
-    fontWeight: '600',
-    marginLeft: spacing.xs,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-  },
-  emptyText: {
-    fontSize: fontSize.lg,
-    fontWeight: '600',
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-  },
+  // loadingContainer, emptyText → commonStyles 사용
+  // 카드 스타일 - shadows.base 사용
   courseCard: {
     backgroundColor: colors.white,
-    borderRadius: 12,
+    borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.md,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...shadows.base,
   },
   courseHeader: {
     flexDirection: 'row',
@@ -208,6 +308,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     flex: 1,
+  },
+  courseActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  copyButton: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  copyButtonText: {
+    color: colors.primary,
+    fontSize: fontSize.sm,
+    fontWeight: '600',
   },
   deleteButton: {
     paddingHorizontal: spacing.sm,
@@ -244,5 +357,19 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.textLight,
     textAlign: 'right',
+  },
+  // 헤더 버튼 영역
+  headerButtons: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  importButton: {
+    ...commonStyles.buttonSmall,
+    backgroundColor: colors.secondary,
+    borderRadius: borderRadius.base,
+  },
+  importButtonText: {
+    ...commonStyles.buttonSmallText,
+    color: colors.white,
   },
 });

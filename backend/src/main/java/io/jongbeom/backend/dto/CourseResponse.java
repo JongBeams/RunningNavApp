@@ -24,6 +24,7 @@ public class CourseResponse {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
     private Boolean isActive;
+    private String shareCode; // 공유용 코드 (영문+숫자 8자리)
 
     public static CourseResponse from(Course course) {
         GeoJsonWriter writer = new GeoJsonWriter();
@@ -38,6 +39,7 @@ public class CourseResponse {
                 .createdAt(course.getCreatedAt())
                 .updatedAt(course.getUpdatedAt())
                 .isActive(course.getIsActive())
+                .shareCode(course.getShareCode())
                 .build();
     }
 }

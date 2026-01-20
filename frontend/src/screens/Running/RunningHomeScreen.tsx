@@ -15,6 +15,7 @@ import {
   spacing,
   fontSize,
   commonStyles,
+  borderRadius,
   RUNNIGN_START_ICON_PATH,
   HOME_ICON_PATH,
   LIST_COURSE_ICON_PATH,
@@ -31,6 +32,7 @@ import {
   CourseResponse,
   geoJsonToWaypoints,
 } from '../../services/api/courseApi';
+import {saveData, getData, STORAGE_KEYS} from '../../services/storageService';
 
 type RunningScreenNav = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList>,
@@ -89,8 +91,23 @@ export default function RunningHomeScreen() {
           setSelectedCourse(stillExists);
         }
       } else {
-        // 선택된 코스가 없으면 첫 번째 코스를 기본 선택
+        // 선택된 코스가 없으면 저장된 최근 선택 코스 또는 첫 번째 코스를 기본 선택
         if (data.length > 0) {
+          try {
+            const lastSelectedId = await getData<string>(STORAGE_KEYS.LAST_SELECTED_COURSE_ID);
+            if (lastSelectedId) {
+              const lastCourse = data.find(c => c.id === lastSelectedId);
+              if (lastCourse) {
+                console.log('[RunningHome] 최근 선택 코스 복원:', lastCourse.name);
+                setSelectedCourse(lastCourse);
+                return;
+              }
+              console.log('[RunningHome] 저장된 코스가 삭제됨, 첫 번째 코스 선택');
+            }
+          } catch (error) {
+            console.error('[RunningHome] 저장된 코스 ID 로드 실패:', error);
+          }
+          // 저장된 코스가 없거나 삭제된 경우 첫 번째 코스 선택
           console.log('[RunningHome] 첫 번째 코스 기본 선택:', data[0].name);
           setSelectedCourse(data[0]);
         }
@@ -126,10 +143,18 @@ export default function RunningHomeScreen() {
   );
 
   // 코스 선택 핸들러
-  const handleSelectCourse = (course: CourseResponse) => {
+  const handleSelectCourse = async (course: CourseResponse) => {
     setSelectedCourse(course);
     setShowCourseList(false);
     console.log('[RunningHome] 코스 선택:', course.name);
+
+    // 선택한 코스 ID를 AsyncStorage에 저장
+    try {
+      await saveData(STORAGE_KEYS.LAST_SELECTED_COURSE_ID, course.id);
+      console.log('[RunningHome] 선택한 코스 ID 저장:', course.id);
+    } catch (error) {
+      console.error('[RunningHome] 코스 ID 저장 실패:', error);
+    }
   };
 
   // 코스 시작 지점 좌표 가져오기
@@ -264,22 +289,22 @@ export default function RunningHomeScreen() {
         animationType="slide"
         transparent={true}
         onRequestClose={() => setShowCourseList(false)}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>코스 선택</Text>
+        <View style={commonStyles.modalOverlay}>
+          <View style={[commonStyles.modalSheet, styles.modalContent]}>
+            <View style={commonStyles.modalHeader}>
+              <Text style={commonStyles.modalTitle}>코스 선택</Text>
               <TouchableOpacity onPress={() => setShowCourseList(false)}>
-                <Text style={styles.closeButton}>닫기</Text>
+                <Text style={commonStyles.modalCloseText}>닫기</Text>
               </TouchableOpacity>
             </View>
 
             {isLoading ? (
-              <View style={styles.loadingContainer}>
+              <View style={commonStyles.loadingContainer}>
                 <ActivityIndicator size="large" color={colors.primary} />
-                <Text style={styles.loadingText}>코스 불러오는 중...</Text>
+                <Text style={commonStyles.loadingText}>코스 불러오는 중...</Text>
               </View>
             ) : courses.length === 0 ? (
-              <View style={styles.emptyContainer}>
+              <View style={commonStyles.emptyContainer}>
                 <Text style={styles.emptyText}>저장된 코스가 없습니다.</Text>
                 <TouchableOpacity
                   style={styles.createButton}
@@ -369,49 +394,9 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontWeight: '500',
   },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
+  // modalContainer, modalHeader, modalTitle, closeButton, loadingContainer, loadingText, emptyContainer → commonStyles 사용
   modalContent: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
     maxHeight: '80%',
-    paddingBottom: spacing.md,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
-  modalTitle: {
-    fontSize: fontSize.xl,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  closeButton: {
-    fontSize: fontSize.base,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  loadingContainer: {
-    paddingVertical: spacing.xxxl,
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: spacing.lg,
-    fontSize: fontSize.base,
-    color: colors.textSecondary,
-  },
-  emptyContainer: {
-    paddingVertical: spacing.xxxl,
-    alignItems: 'center',
   },
   emptyText: {
     fontSize: fontSize.base,
@@ -422,13 +407,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.sm,
-    borderRadius: 8,
+    borderRadius: borderRadius.base,
   },
   createButtonText: {
     color: colors.white,
     fontSize: fontSize.base,
     fontWeight: '600',
   },
+  // 리스트 아이템 스타일
   courseItem: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
@@ -436,7 +422,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   courseItemSelected: {
-    backgroundColor: colors.primaryLight + '10',
+    ...commonStyles.cardHighlight,
   },
   courseItemHeader: {
     flexDirection: 'row',
@@ -454,7 +440,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: borderRadius.sm,
   },
   selectedBadgeText: {
     fontSize: fontSize.xs,

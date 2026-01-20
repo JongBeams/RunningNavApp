@@ -5,6 +5,7 @@ export const STORAGE_KEYS = {
   COURSES: '@courses',
   USER_SETTINGS: '@user_settings',
   CURRENT_LOCATION: '@current_location',
+  LAST_SELECTED_COURSE_ID: '@last_selected_course_id', // 최근 선택한 코스 ID
 } as const;
 
 /**

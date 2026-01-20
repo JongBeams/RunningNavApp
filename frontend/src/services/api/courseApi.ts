@@ -33,6 +33,7 @@ export interface CourseResponse {
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
+  shareCode?: string; // 공유용 코드 (영문+숫자)
 }
 
 /**
@@ -107,4 +108,16 @@ export const getCourseById = async (
  */
 export const deleteCourse = async (courseId: string): Promise<void> => {
   await apiClient.delete(`/api/courses/${courseId}`);
+};
+
+/**
+ * shareCode로 코스 조회 (공개 API)
+ */
+export const getCourseByShareCode = async (
+  shareCode: string,
+): Promise<CourseResponse> => {
+  const response = await apiClient.get<CourseResponse>(
+    `/api/courses/share/${shareCode}`,
+  );
+  return response.data;
 };

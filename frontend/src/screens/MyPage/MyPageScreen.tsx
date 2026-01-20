@@ -233,7 +233,7 @@ export default function MyPageScreen() {
 
           {records.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>아직 러닝 기록이 없습니다</Text>
+              <Text style={commonStyles.emptyText}>아직 러닝 기록이 없습니다</Text>
               <Text style={styles.emptySubText}>
                 첫 러닝을 시작해보세요!
               </Text>
@@ -392,11 +392,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.xl,
   },
-  emptyText: {
-    fontSize: fontSize.base,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-  },
+  // emptyText → commonStyles.emptyText 사용
   emptySubText: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,

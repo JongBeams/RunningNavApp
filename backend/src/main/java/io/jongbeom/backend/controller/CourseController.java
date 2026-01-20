@@ -81,4 +81,18 @@ public class CourseController {
 
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * shareCode로 코스 조회 (공개 API - 인증 불필요)
+     */
+    @GetMapping("/share/{shareCode}")
+    public ResponseEntity<CourseResponse> getCourseByShareCode(
+            @PathVariable String shareCode
+    ) {
+        log.info("[API] shareCode로 코스 조회 요청: shareCode={}", shareCode);
+
+        CourseResponse response = courseService.getCourseByShareCode(shareCode);
+
+        return ResponseEntity.ok(response);
+    }
 }

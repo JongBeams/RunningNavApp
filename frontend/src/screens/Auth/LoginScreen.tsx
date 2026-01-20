@@ -12,7 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import {useAuth} from '../../context/AuthContext';
-import {colors} from '../../styles';
+import {colors, commonStyles, spacing, fontSize, borderRadius} from '../../styles';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import type {AuthStackParamList} from '../../types/navigation';
 
@@ -117,9 +117,9 @@ const LoginScreen: React.FC<Props> = ({navigation}) => {
         <View style={styles.form}>
           {/* 이메일 입력 */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>이메일</Text>
+            <Text style={commonStyles.label}>이메일</Text>
             <TextInput
-              style={[styles.input, errors.email ? styles.inputError : null]}
+              style={[commonStyles.input, errors.email ? commonStyles.inputError : null]}
               placeholder="example@email.com"
               placeholderTextColor={colors.gray}
               value={email}
@@ -133,17 +133,17 @@ const LoginScreen: React.FC<Props> = ({navigation}) => {
               editable={!isLoading}
             />
             {errors.email ? (
-              <Text style={styles.errorText}>{errors.email}</Text>
+              <Text style={commonStyles.errorText}>{errors.email}</Text>
             ) : null}
           </View>
 
           {/* 비밀번호 입력 */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>비밀번호</Text>
+            <Text style={commonStyles.label}>비밀번호</Text>
             <TextInput
               style={[
-                styles.input,
-                errors.password ? styles.inputError : null,
+                commonStyles.input,
+                errors.password ? commonStyles.inputError : null,
               ]}
               placeholder="8자 이상 입력"
               placeholderTextColor={colors.gray}
@@ -157,7 +157,7 @@ const LoginScreen: React.FC<Props> = ({navigation}) => {
               editable={!isLoading}
             />
             {errors.password ? (
-              <Text style={styles.errorText}>{errors.password}</Text>
+              <Text style={commonStyles.errorText}>{errors.password}</Text>
             ) : null}
           </View>
 
@@ -194,77 +194,58 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 24,
+    padding: spacing.xl,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: spacing.xxxl + spacing.sm,
   },
   title: {
-    fontSize: 36,
+    fontSize: fontSize.display + 4,
     fontWeight: 'bold',
     color: colors.primary,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: fontSize.base,
     color: colors.gray,
   },
   form: {
     width: '100%',
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: spacing.lg,
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.darkGray,
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.lightGray,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: colors.black,
-    backgroundColor: colors.white,
-  },
-  inputError: {
-    borderColor: colors.error,
-  },
-  errorText: {
-    fontSize: 12,
-    color: colors.error,
-    marginTop: 4,
-  },
+  // label → commonStyles.label 사용
+  // input → commonStyles.input 사용
+  // inputError → commonStyles.inputError 사용
+  // errorText → commonStyles.errorText 사용
   button: {
     backgroundColor: colors.primary,
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: borderRadius.base,
+    padding: spacing.base,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: spacing.sm,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: fontSize.base,
     fontWeight: 'bold',
     color: colors.white,
   },
   signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 24,
+    marginTop: spacing.xl,
   },
   signupText: {
-    fontSize: 14,
+    fontSize: fontSize.sm,
     color: colors.gray,
   },
   signupLink: {
-    fontSize: 14,
+    fontSize: fontSize.sm,
     fontWeight: 'bold',
     color: colors.primary,
   },

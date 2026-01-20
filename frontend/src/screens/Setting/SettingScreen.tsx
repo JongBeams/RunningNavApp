@@ -52,8 +52,8 @@ export default function SettingScreen() {
 
   if (isLoading) {
     return (
-      <View style={[commonStyles.container, styles.loadingContainer]}>
-        <Text style={styles.loadingText}>설정 불러오는 중...</Text>
+      <View style={[commonStyles.container, commonStyles.loadingContainer]}>
+        <Text style={commonStyles.loadingText}>설정 불러오는 중...</Text>
       </View>
     );
   }
@@ -100,14 +100,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  loadingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: fontSize.base,
-    color: colors.textSecondary,
-  },
+  // loadingContainer, loadingText → commonStyles 사용
   header: {
     backgroundColor: colors.white,
     paddingHorizontal: spacing.lg,
