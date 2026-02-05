@@ -16,6 +16,7 @@ import {
   fontSize,
   commonStyles,
 } from '../../styles';
+import {AppConfig} from '../../config/appConfig';
 import KakaoMapWebView from '../../components/map/KakaoMapWebView';
 import {geoJsonToWaypoints} from '../../services/api/courseApi';
 import useRunningSession, {RunningSessionStatus} from '../../hooks/useRunningSession';
@@ -334,24 +335,26 @@ export default function RunningNavigationScreen() {
             <Text style={styles.courseName}>{course.name}</Text>
           </View>
 
-          {/* 디버그: 현재 좌표 표시 */}
-          <View style={styles.debugContainer}>
-            <Text style={styles.debugText}>
-              상태: {status}
-            </Text>
-            <Text style={styles.debugText}>
-              위도: {displayLat?.toFixed(6) || 'null'}
-            </Text>
-            <Text style={styles.debugText}>
-              경도: {displayLng?.toFixed(6) || 'null'}
-            </Text>
-            <Text style={styles.debugText}>
-              방향: {displayHeading?.toFixed(1) || 'null'}°
-            </Text>
-            <Text style={styles.debugText}>
-              소스: {isIdle ? '미리보기' : '러닝 세션'}
-            </Text>
-          </View>
+          {/* 디버그: 현재 좌표 표시 (AppConfig.SHOW_DEBUG_UI로 제어) */}
+          {AppConfig.SHOW_DEBUG_UI && (
+            <View style={styles.debugContainer}>
+              <Text style={styles.debugText}>
+                상태: {status}
+              </Text>
+              <Text style={styles.debugText}>
+                위도: {displayLat?.toFixed(6) || 'null'}
+              </Text>
+              <Text style={styles.debugText}>
+                경도: {displayLng?.toFixed(6) || 'null'}
+              </Text>
+              <Text style={styles.debugText}>
+                방향: {displayHeading?.toFixed(1) || 'null'}°
+              </Text>
+              <Text style={styles.debugText}>
+                소스: {isIdle ? '미리보기' : '러닝 세션'}
+              </Text>
+            </View>
+          )}
 
           {/* 경로 이탈 경고 */}
           {isOffRoute && (
