@@ -148,17 +148,17 @@ export default function ListCourseScreen() {
     <View style={commonStyles.container}>
       <ScrollView style={styles.content}>
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={commonStyles.title}>코스 목록</Text>
             <Text style={commonStyles.subtitle}>저장된 러닝 경로를 확인하세요</Text>
           </View>
           <View style={styles.headerButtons}>
-            <TouchableOpacity style={styles.importButton} onPress={handleOpenImportModal}>
-              <Text style={styles.importButtonText}>코스 불러오기</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.addButton} onPress={handleAddCourse}>
               <SVGIcon iconPath={ADD_COURSE_ICON_PATH} color={colors.white} size={20} />
               <Text style={styles.addButtonText}>코스 추가</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.importButton} onPress={handleOpenImportModal}>
+              <Text style={styles.importButtonText}>코스 불러오기</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -275,8 +275,11 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: spacing.md,
+  },
+  headerLeft: {
+    flex: 1,
   },
   // 버튼 스타일 - commonStyles.buttonSmall 기반
   addButton: {
@@ -358,10 +361,11 @@ const styles = StyleSheet.create({
     color: colors.textLight,
     textAlign: 'right',
   },
-  // 헤더 버튼 영역
+  // 헤더 버튼 영역 (세로 정렬)
   headerButtons: {
-    flexDirection: 'row',
-    gap: spacing.sm,
+    flexDirection: 'column',
+    gap: spacing.xs,
+    alignItems: 'flex-end',
   },
   importButton: {
     ...commonStyles.buttonSmall,
